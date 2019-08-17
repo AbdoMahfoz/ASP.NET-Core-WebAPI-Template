@@ -16,6 +16,5 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DataModels\" />
-    <Folder Include="Helpers\" />
   </ItemGroup>
 </Project>

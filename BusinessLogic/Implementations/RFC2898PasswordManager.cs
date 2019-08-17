@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace BusinessLogic.Implementations
 {
-    public class RFC2892PasswordManager : IPasswordManager
+    public class RFC2898PasswordManager : IPasswordManager
     {
         public bool ComparePassword(string Vanilla, string Hashed)
         {

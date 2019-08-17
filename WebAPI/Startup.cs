@@ -118,7 +118,7 @@ namespace WebAPI
             services.AddTransient<IAuth, JwtAuthorization>();
             services.AddTransient<IValidator<UserAuthenticationRequest>, UserAuthenticationRequestValidator>();
             services.AddScoped<IAuthorizationHandler, LoginHandler>();
-            services.AddSingleton<IPasswordManager, RFC2892PasswordManager>();
+            services.AddSingleton<IPasswordManager, RFC2898PasswordManager>();
         }
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
