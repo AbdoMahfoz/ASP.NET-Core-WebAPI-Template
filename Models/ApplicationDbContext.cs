@@ -1,7 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Models.DataModels;
+using Models.Helpers;
+using Newtonsoft.Json;
 using System;
+using System.IO;
 
 namespace Models
 {
@@ -20,6 +23,11 @@ namespace Models
             string url = Environment.GetEnvironmentVariable("DATABASE_URL");
             if (string.IsNullOrWhiteSpace(url))
             {
+                if(string.IsNullOrWhiteSpace(LocalDatabaseName))
+                {
+                    LocalDatabaseName = JsonConvert.DeserializeAnonymousType(File.ReadAllText(Path.Combine("..", "WebAPI", "appsettings.json")),
+                                            new { AppSettings = new AppSettings() }).AppSettings.LocalDatabaseName;
+                }
                 options.UseNpgsql($"Host=localhost;" +
                                   $"Port=5432;" +
                                   $"Database={LocalDatabaseName};" +

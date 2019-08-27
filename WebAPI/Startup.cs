@@ -54,11 +54,11 @@ namespace WebAPI
                 opt.Filters.Add(typeof(ValidatorActionFilter));
             })
             .AddFluentValidation();
-            var appSettingsSection = Configuration.GetSection("AppSettings");
+            IConfigurationSection appSettingsSection = Configuration.GetSection("AppSettings");
             services.Configure<AppSettings>(appSettingsSection);
-            var appSettings = appSettingsSection.Get<AppSettings>();
+            AppSettings appSettings = appSettingsSection.Get<AppSettings>();
             ApplicationDbContext.LocalDatabaseName = appSettings.LocalDatabaseName;
-            var key = Encoding.ASCII.GetBytes(appSettings.Secret);
+            byte[] key = Encoding.ASCII.GetBytes(appSettings.Secret);
             services.AddDbContext<ApplicationDbContext>((options) =>
             {
                 ApplicationDbContext.Configure(options);
@@ -92,10 +92,10 @@ namespace WebAPI
                 c.SwaggerDoc("v1", new Info
                 {
                     Version = "v1",
-                    Title = "ASP.NET Core Template",
-                    Description = "This is the Documentation for A Template ASP.NET Core project",
+                    Title = appSettings.SiteData.Name,
+                    Description = appSettings.SiteData.APIDescription,
                     TermsOfService = "None",
-                    Contact = new Contact() { Name = "YourName", Email = "YourEmail@Domain.com" }
+                    Contact = new Contact() { Name = appSettings.Contact.Name, Email = appSettings.Contact.Email }
                 });
                 c.AddSecurityDefinition("Bearer",
                     new ApiKeyScheme
@@ -138,7 +138,8 @@ namespace WebAPI
                 );
             });
             app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ASP.NET Core Template API V1"));
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json",
+                                                    $"{Configuration.GetSection("AppSettings").Get<AppSettings>().SiteData.Name} API V1"));
         }
     }
 }
