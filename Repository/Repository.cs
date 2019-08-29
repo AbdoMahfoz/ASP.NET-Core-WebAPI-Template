@@ -129,7 +129,14 @@ namespace Repository
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    if(ex.InnerException != null)
+                    {
+                        Console.WriteLine($"{ex.Message}:\n{ex.InnerException.Message}");
+                    }
+                    else
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
                     Thread.Sleep(1000);
                 }
             }
