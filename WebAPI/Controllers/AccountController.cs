@@ -33,8 +33,8 @@ namespace WebAPI.Controllers
         /// </remarks>
         /// <param name="request">User credentials</param>
         /// <response code="404">Invalid username or password</response>
-        /// <response code="302">Login successful</response>
-        [ProducesResponseType(302, Type = typeof(UserAuthenticationResult))]
+        /// <response code="202">Login successful</response>
+        [ProducesResponseType(202, Type = typeof(UserAuthenticationResult))]
         [ProducesResponseType(404, Type = null)]
         [HttpPost("Token")]
         public IActionResult Login([FromBody]UserAuthenticationRequest request)
@@ -42,7 +42,7 @@ namespace WebAPI.Controllers
             User user = Auth.Authenticate(request);
             if (user == null)
                 return NotFound();
-            return StatusCode(StatusCodes.Status302Found, new UserAuthenticationResult(user.Id, user.Token, options.Value.TokenExpirationMinutes));
+            return StatusCode(StatusCodes.Status202Accepted, new UserAuthenticationResult(user.Id, user.Token, options.Value.TokenExpirationMinutes));
         }
         /// <summary>
         /// Creates a new token with the same credientials of the exisiting one
