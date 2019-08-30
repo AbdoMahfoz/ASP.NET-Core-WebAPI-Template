@@ -32,7 +32,7 @@ namespace BusinessLogic.Implementations
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(ClaimTypes.Role, "User"),
+                    new Claim(ClaimTypes.Role, user.Role.ToString()),
                     new Claim("Id", user.Id.ToString()),
                     new Claim("DateIssued", DateTime.UtcNow.ToString())
                 }),
@@ -59,13 +59,14 @@ namespace BusinessLogic.Implementations
             }
             return GenerateToken(user);
         }
-        public bool Register(UserAuthenticationRequest request)
+        public bool Register(UserAuthenticationRequest request, UserRole Role)
         {
             if (UserRepository.CheckUsernameExists(request.Username)) return false;
             UserRepository.Insert(new User
             {
                 UserName = request.Username,
-                Password = PasswordManager.HashPassword(request.Password)
+                Password = PasswordManager.HashPassword(request.Password),
+                Role = Role
             }).Wait();
             return true;
         }

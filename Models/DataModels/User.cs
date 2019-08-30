@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Models.DataModels
 {
+    public enum UserRole { User, Admin }
     public class User : BaseModel
     {
         [Required]
@@ -14,5 +15,6 @@ namespace Models.DataModels
         public DateTime? LastLogOut { get; set; }
         [NotMapped]
         public string Token { get; set; }
+        public UserRole Role { get; set; }
     }
 }

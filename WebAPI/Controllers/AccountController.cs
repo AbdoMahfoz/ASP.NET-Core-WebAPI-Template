@@ -70,7 +70,7 @@ namespace WebAPI.Controllers
         [HttpPost("Register")]
         public IActionResult Register([FromBody]UserAuthenticationRequest request)
         {
-            if (Auth.Register(request))
+            if (Auth.Register(request, UserRole.User))
                 return Ok();
             return StatusCode(StatusCodes.Status409Conflict);
         }
