@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
 
@@ -7,7 +6,6 @@ namespace BusinessLogic.Initializers
 {
     public class BaseInitializer
     {
-        static private List<BaseInitializer> initializers = new List<BaseInitializer>();
         public virtual void Initialize()
         {
             foreach (Type type in (from type in Assembly.GetAssembly(typeof(BaseInitializer)).GetTypes()
