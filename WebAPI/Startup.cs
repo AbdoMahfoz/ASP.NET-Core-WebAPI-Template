@@ -120,7 +120,7 @@ namespace WebAPI
             services.AddTransient<IValidator<UserAuthenticationRequest>, UserAuthenticationRequestValidator>();
             services.AddScoped<IAuthorizationHandler, LoginHandler>();
             services.AddSingleton<IPasswordManager, RFC2898PasswordManager>();
-            new BaseInitializer().Initialize();
+            new BaseInitializer(services.BuildServiceProvider()).Initialize();
         }
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
