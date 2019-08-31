@@ -122,7 +122,7 @@ namespace WebAPI
             services.AddScoped<IAuthorizationHandler, LoginHandler>();
             services.AddSingleton<IPasswordManager, RFC2898PasswordManager>();
             new ApplicationDbContext().Database.Migrate();
-            new BaseInitializer(services.BuildServiceProvider()).Initialize();
+            new BaseInitializer(services.BuildServiceProvider());
         }
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
