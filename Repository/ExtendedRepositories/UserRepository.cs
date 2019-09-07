@@ -20,7 +20,7 @@ namespace Repository.ExtendedRepositories
         }
         public bool CheckUsernameExists(string username)
         {
-            return (from user in entities where user.UserName == username && user.IsDeleted == false select user.Id).Count() != 0;
+            return (from user in entities where user.UserName == username && user.IsDeleted == false select user.Id).Any();
         }
     }
 }   
