@@ -22,14 +22,18 @@ namespace Repository
 
         public virtual IQueryable<T> GetAll()
         {
-            return entities.Where(e => e.IsDeleted == false).AsQueryable();
+            return from row in entities
+                   where !row.IsDeleted
+                   select row;
         }
         public virtual T Get(int id)
         {
-            return entities.Where(e => e.IsDeleted == false).FirstOrDefault(s => s.Id == id);
+            return (from row in GetAll()
+                    where row.Id == id
+                    select row).SingleOrDefault();
         }
 
-        public async Task Insert(T entity)
+        public virtual async Task Insert(T entity)
         {
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity), "The Inserted Entity is Null");
@@ -38,7 +42,7 @@ namespace Repository
             await entities.AddAsync(entity);
             SaveChanges();
         }
-        public async Task InsertRange(IEnumerable<T> Entities)
+        public virtual async Task InsertRange(IEnumerable<T> Entities)
         {
             if (!Entities.Any())
                 throw new ArgumentNullException(nameof(Entities), "The Inserted Entites are Null");
@@ -52,7 +56,7 @@ namespace Repository
             SaveChanges();
         }
 
-        public void Update(T entity)
+        public virtual void Update(T entity)
         {
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity), "The Updated entity is null");
@@ -61,7 +65,7 @@ namespace Repository
             entities.Update(entity);
             SaveChanges();
         }
-        public void UpdateRange(IEnumerable<T> Entities)
+        public virtual void UpdateRange(IEnumerable<T> Entities)
         {
             if (!Entities.Any())
                 throw new ArgumentNullException(nameof(Entities), "Upadted Entites are Null");
@@ -74,7 +78,7 @@ namespace Repository
             SaveChanges();
         }
 
-        public void SoftDelete(T entity)
+        public virtual void SoftDelete(T entity)
         {
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity), "The Deleted Entity Is Null");
@@ -83,7 +87,7 @@ namespace Repository
             entity.DeletedDate = DateTime.UtcNow;
             SaveChanges();
         }
-        public void SoftDeleteRange(IEnumerable<T> Entities)
+        public virtual void SoftDeleteRange(IEnumerable<T> Entities)
         {
             if (!Entities.Any())
                 throw new ArgumentNullException(nameof(Entities), "The Deleted Entites are Null");
@@ -96,24 +100,17 @@ namespace Repository
             SaveChanges();
         }
 
-        public void HardDelete(T entity)
+        public virtual void HardDelete(T entity)
         {
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity), "The Deleted Entity Is Null");
-            entity.DeletedDate = DateTime.UtcNow;
             entities.Remove(entity);
             SaveChanges();
         }
-        public void HardDeleteRange(IEnumerable<T> Entities)
+        public virtual void HardDeleteRange(IEnumerable<T> Entities)
         {
             if (!Entities.Any())
                 throw new ArgumentNullException(nameof(Entities), "The Deleted Entites are Null");
-
-            foreach (var item in Entities)
-            {
-                item.IsDeleted = true;
-                item.DeletedDate = DateTime.UtcNow;
-            }
             entities.RemoveRange(Entities);
             SaveChanges();
         }
@@ -129,7 +126,7 @@ namespace Repository
                 }
                 catch (Exception ex)
                 {
-                    if(ex.InnerException != null)
+                    if (ex.InnerException != null)
                     {
                         Console.WriteLine($"{ex.Message}:\n{ex.InnerException.Message}");
                     }
@@ -137,7 +134,7 @@ namespace Repository
                     {
                         Console.WriteLine(ex.Message);
                     }
-                    Thread.Sleep(1000);
+                    Thread.Sleep(2000);
                 }
             }
         }

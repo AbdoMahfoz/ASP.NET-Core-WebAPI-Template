@@ -16,11 +16,15 @@ namespace Repository.ExtendedRepositories
 
         public User GetUser(string username)
         {
-            return entities.Where(e => e.IsDeleted == false).SingleOrDefault(u => u.UserName == username);
+            return (from user in GetAll()
+                    where user.UserName == username
+                    select user).SingleOrDefault();
         }
         public bool CheckUsernameExists(string username)
         {
-            return (from user in entities where user.UserName == username && user.IsDeleted == false select user.Id).Any();
+            return (from user in GetAll()
+                    where user.UserName == username
+                    select user).Any();
         }
     }
 }   
