@@ -114,29 +114,10 @@ namespace Repository
             entities.RemoveRange(Entities);
             SaveChanges();
         }
-
         public void SaveChanges()
         {
-            for (int i = 0; i < 3; i++)
-            {
-                try
-                {
-                    context.SaveChanges();
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    if (ex.InnerException != null)
-                    {
-                        Console.WriteLine($"{ex.Message}:\n{ex.InnerException.Message}");
-                    }
-                    else
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                    Thread.Sleep(2000);
-                }
-            }
+            context.SaveChanges();
+            return;
         }
     }
 }
