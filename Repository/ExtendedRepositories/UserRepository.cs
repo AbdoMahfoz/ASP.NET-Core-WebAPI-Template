@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using Models;
 using Models.DataModels;
 
@@ -12,13 +14,12 @@ namespace Repository.ExtendedRepositories
     }
     public class UserRepository : Repository<User>, IUserRepository
     {
-        public UserRepository(ApplicationDbContext _context) : base(_context) { }
+        public UserRepository(ApplicationDbContext context, ILogger<UserRepository> logger) : base(context, logger) { }
 
         public User GetUser(string username)
         {
-            return (from user in GetAll()
-                    where user.UserName == username
-                    select user).SingleOrDefault();
+            var result = Entities.Where(e => e.IsDeleted == false && e.UserName == username).AsQueryable().FirstOrDefault();
+            return result != null && result.Id > 0 ? result : throw new KeyNotFoundException($"{nameof(username)} {username} Doesn't exist in {nameof(User)} Table");
         }
         public bool CheckUsernameExists(string username)
         {
@@ -27,4 +28,4 @@ namespace Repository.ExtendedRepositories
                     select user).Any();
         }
     }
-}   
+}
