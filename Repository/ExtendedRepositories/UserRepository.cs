@@ -18,7 +18,7 @@ namespace Repository.ExtendedRepositories
 
         public User GetUser(string username)
         {
-            var result = Entities.Where(e => e.IsDeleted == false && e.UserName == username).AsQueryable().FirstOrDefault();
+            var result = GetAll().Where(e => e.UserName == username).AsQueryable().FirstOrDefault();
             return result != null && result.Id > 0 ? result : throw new KeyNotFoundException($"{nameof(username)} {username} Doesn't exist in {nameof(User)} Table");
         }
         public bool CheckUsernameExists(string username)
