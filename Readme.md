@@ -1,4 +1,4 @@
-# purpose
+# Purpose
 
 This is an asp.net core web api jump starter template with a bunch of useful features such as
 * JWT Authentication 
