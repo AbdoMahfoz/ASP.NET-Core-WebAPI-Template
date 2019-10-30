@@ -3,11 +3,13 @@
 This is an asp.net core web api jump starter template with a bunch of useful features such as
 * JWT Authentication 
 * Generic Exception Handling
+* Swagger Documentation
+* Action Filters Validation
 * Self Explanatory error messeges 
 * File Logger
+* Unit Tests Project
 
 ## Usage
-
 Feel free to initialize a new repo with the template by clicking the "Use This Template" Button
 Or 
 To download the Solution and start coding on the fly 
