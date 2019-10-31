@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using BusinessLogic.HelperLogic;
 using BusinessLogic.Implementations;
 using BusinessLogic.Initializers;
 using BusinessLogic.Interfaces;
@@ -120,6 +121,7 @@ namespace WebAPI
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddTransient<IAuth, JwtAuthorization>();
             services.AddTransient<IValidator<UserAuthenticationRequest>, UserAuthenticationRequestValidator>();
+            services.AddTransient<IEmailSender, EmailSenderLogic>();
             services.AddScoped<IAuthorizationHandler, LoginHandler>();
             services.AddSingleton<IPasswordManager, RFC2898PasswordManager>();
 
