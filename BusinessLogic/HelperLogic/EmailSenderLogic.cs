@@ -4,11 +4,11 @@ using MimeKit;
 
 namespace BusinessLogic.HelperLogic
 {
-    public interface IEmailSenderLogic
+    public interface IEmailSender
     {
         void SendEmail(string toEmail, string fromEmail, string message, string fromTitle = "", string Subject = "");
     }
-    public class EmailSenderLogic : IEmailSenderLogic
+    public class EmailSenderLogic : IEmailSender
     {
         public void SendEmail(string toEmail, string fromEmail, string message, string fromTitle = "", string Subject = "")
         {
