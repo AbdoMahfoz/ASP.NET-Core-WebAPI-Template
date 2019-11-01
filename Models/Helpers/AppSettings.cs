@@ -12,12 +12,19 @@
             public string Name { get; set; }
             public string Email { get; set; }
         }
+        public class SMTPObject
+        {
+            public string Email { get; set; }
+            public string Password { get; set; }
+            public string Host { get; set; }
+            public int Port { get; set; }
+            public bool UseSSL { get; set; }
+        }
         public SiteDataObject SiteData { get; set; }
         public ContactObject Contact { get; set; }
+        public SMTPObject SMTP { get; set; }
         public string Secret { get; set; }
         public int TokenExpirationMinutes { get; set; }
         public string LocalDatabaseName { get; set; }
-        public string SMTPEmail { get; set; }
-        public string SMTPPassword { get; set; }
     }
 }

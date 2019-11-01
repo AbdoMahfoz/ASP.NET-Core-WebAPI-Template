@@ -13,11 +13,12 @@ namespace Services.MailService
         {
             this.json = json;
         }
-        public void SendEmail(string toEmail, string fromEmail, string message, string fromTitle = "", string Subject = "")
+        public void SendEmail(string toEmail, string message, string fromTitle = "", string Subject = "")
         {
+            var options = json.Value.SMTP;
             toEmail = toEmail.ToLower();
             var email = new MimeMessage();
-            var from = new MailboxAddress(fromTitle, fromEmail);
+            var from = new MailboxAddress(fromTitle, options.Email);
             email.From.Add(from);
 
             var to = new MailboxAddress(toEmail);
@@ -33,8 +34,8 @@ namespace Services.MailService
             var client = new SmtpClient();
             try
             {
-                client.Connect("smtp-mail.outlook.com", 587, false);
-                client.Authenticate(json.Value.SMTPEmail, json.Value.SMTPPassword);
+                client.Connect(options.Host, options.Port, options.UseSSL);
+                client.Authenticate(options.Email, options.Password);
                 client.Send(email);
                 client.Disconnect(true);
             }
