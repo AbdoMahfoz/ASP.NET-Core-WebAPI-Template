@@ -47,16 +47,15 @@ namespace WebAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc(opt =>
-                {
-                    opt.Filters.Add(typeof(ValidatorActionFilter));
-
-                })
-                .AddJsonOptions(options =>
-                {
-                    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                })
-                .AddFluentValidation()
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            {
+                opt.Filters.Add(typeof(ValidatorActionFilter));
+            })
+            .AddJsonOptions(options =>
+            {
+                options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            })
+            .AddFluentValidation()
+            .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             var appSettingsSection = Configuration.GetSection("AppSettings");
             services.Configure<AppSettings>(appSettingsSection);
@@ -66,22 +65,22 @@ namespace WebAPI
             services.AddDbContext<ApplicationDbContext>(ApplicationDbContext.Configure);
 
             services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
                 {
-                    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                })
-                .AddJwtBearer(x =>
-                {
-                    x.RequireHttpsMetadata = false;
-                    x.SaveToken = true;
-                    x.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(key),
-                        ValidateIssuer = false,
-                        ValidateAudience = false
-                    };
-                });
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false
+                };
+            });
             services.AddAuthorization(options =>
             {
                 options.DefaultPolicy = new AuthorizationPolicy(
@@ -125,7 +124,10 @@ namespace WebAPI
             services.AddScoped<IAuthorizationHandler, LoginHandler>();
             services.AddSingleton<IPasswordManager, RFC2898PasswordManager>();
 
-            new ApplicationDbContext().Database.Migrate();
+            using (ApplicationDbContext db = new ApplicationDbContext())
+            {
+                db.Database.Migrate();
+            }
             new BaseInitializer(services.BuildServiceProvider());
         }
 
