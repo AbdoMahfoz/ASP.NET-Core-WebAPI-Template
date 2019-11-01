@@ -16,9 +16,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="HelperLogic\" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="MailKit" Version="2.3.2" />
   </ItemGroup>
 </Project>

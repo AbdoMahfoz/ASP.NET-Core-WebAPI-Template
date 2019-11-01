@@ -17,5 +17,7 @@
         public string Secret { get; set; }
         public int TokenExpirationMinutes { get; set; }
         public string LocalDatabaseName { get; set; }
+        public string SMTPEmail { get; set; }
+        public string SMTPPassword { get; set; }
     }
 }
