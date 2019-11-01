@@ -1,6 +1,9 @@
 using System.Reflection;
 using System.Collections.Generic;
 using System;
+using System.Linq;
+using System.Linq.Expressions;
+using Services.DTOs;
 
 namespace Services
 {
@@ -53,6 +56,26 @@ namespace Services
                 }
             }
             return res;
+        }
+        public static PagedResult<T> Pagination<T, OT>(int PageIndex, int PerPage, IQueryable<T> source, Expression<Func<T, OT>> orderByColumn)
+        {
+            return new PagedResult<T>
+            {
+                PageIndex = PageIndex,
+                PerPage = PerPage,
+                TotalPageCount = (int)Math.Ceiling((double)source.Count() / PerPage),
+                Data = source.OrderBy(orderByColumn).Skip(PageIndex * PerPage).Take(PerPage)
+            };
+        }
+        public static PagedResult<T> Pagination<T, OT>(int PageIndex, int PerPage, IEnumerable<T> source, Func<T, OT> orderByColumn)
+        {
+            return new PagedResult<T>
+            {
+                PageIndex = PageIndex,
+                PerPage = PerPage,
+                TotalPageCount = (int)Math.Ceiling((double)source.Count() / PerPage),
+                Data = source.OrderBy(orderByColumn).Skip(PageIndex * PerPage).Take(PerPage)
+            };
         }
     }
 }
