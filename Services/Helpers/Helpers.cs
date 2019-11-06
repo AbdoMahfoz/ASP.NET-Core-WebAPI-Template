@@ -57,8 +57,8 @@ namespace Services
             }
             return res;
         }
-        public static PagedResult<T> Pagination<T, OT>(int PageIndex, int PerPage, IQueryable<T> source, 
-            Expression<Func<T, OT>> orderByColumn, bool IsAscending)
+        public static PagedResult<T> Pagination<T, OT>(int PageIndex, int PerPage, IQueryable<T> source,
+            Expression<Func<T, OT>> orderByColumn, bool IsAscending = true)
         {
             IOrderedQueryable<T> Data;
             if (IsAscending) Data = source.OrderBy(orderByColumn);
@@ -71,8 +71,8 @@ namespace Services
                 Data = Data.Skip(PageIndex * PerPage).Take(PerPage)
             };
         }
-        public static PagedResult<T> Pagination<T, OT>(int PageIndex, int PerPage, IEnumerable<T> source, 
-            Func<T, OT> orderByColumn, bool IsAscending)
+        public static PagedResult<T> Pagination<T, OT>(int PageIndex, int PerPage, IEnumerable<T> source,
+            Func<T, OT> orderByColumn, bool IsAscending = true)
         {
             IOrderedEnumerable<T> Data;
             if (IsAscending) Data = source.OrderBy(orderByColumn);
@@ -85,18 +85,18 @@ namespace Services
                 Data = Data.Skip(PageIndex * PerPage).Take(PerPage)
             };
         }
-        public static PagedResult<T> Pagination<T>(int PageIndex, int PerPage, IQueryable<T> source, string orderByColumn, bool IsAscending)
+        public static PagedResult<T> Pagination<T>(int PageIndex, int PerPage, IQueryable<T> source, string orderByColumn, bool IsAscending = true)
         {
             var parameter = Expression.Parameter(typeof(T), "u");
             var val = Expression.Property(parameter, orderByColumn);
-            var lambda = Expression.Lambda<Func<T, object>>(val, parameter);
-            var comparerType = typeof(Comparer<>).MakeGenericType(typeof(T).GetProperty(orderByColumn).PropertyType);
-            IComparer<object> comparer = (IComparer<object>)comparerType
-                                                           .GetProperty("Default", BindingFlags.Public | BindingFlags.Static)
-                                                           .GetValue(null);
-            IOrderedQueryable<T> Data;
-            if (IsAscending) Data = source.OrderBy(lambda, comparer);
-            else Data = source.OrderByDescending(lambda, comparer);
+            var lambda = Expression.Lambda(val, parameter);
+            string orderMethod = "OrderBy";
+            if (!IsAscending) orderMethod += "Descending";
+            Type orderByType = typeof(T).GetProperty(orderByColumn).PropertyType;
+            IOrderedQueryable<T> Data = (IOrderedQueryable<T>)(from method in typeof(Queryable).GetMethods()
+                                                               where method.Name == orderMethod && method.GetParameters().Length == 2
+                                                               select method).Single().MakeGenericMethod(typeof(T), orderByType)
+                                                                                      .Invoke(null, new object[] { source, lambda });
             return new PagedResult<T>
             {
                 PageIndex = PageIndex,
@@ -105,18 +105,18 @@ namespace Services
                 Data = Data.Skip(PageIndex * PerPage).Take(PerPage)
             };
         }
-        public static PagedResult<T> Pagination<T>(int PageIndex, int PerPage, IEnumerable<T> source, string orderByColumn, bool IsAscending)
+        public static PagedResult<T> Pagination<T>(int PageIndex, int PerPage, IEnumerable<T> source, string orderByColumn, bool IsAscending = true)
         {
             var parameter = Expression.Parameter(typeof(T), "u");
             var val = Expression.Property(parameter, orderByColumn);
-            var lambda = Expression.Lambda<Func<T, object>>(val, parameter).Compile();
-            var comparerType = typeof(Comparer<>).MakeGenericType(typeof(T).GetProperty(orderByColumn).PropertyType);
-            IComparer<object> comparer = (IComparer<object>)comparerType
-                                                           .GetProperty("Default", BindingFlags.Public | BindingFlags.Static)
-                                                           .GetValue(null);
-            IOrderedEnumerable<T> Data;
-            if (IsAscending) Data = source.OrderBy(lambda, comparer);
-            else Data = source.OrderByDescending(lambda, comparer);
+            var lambda = Expression.Lambda(val, parameter).Compile();
+            string orderMethod = "OrderBy";
+            if (!IsAscending) orderMethod += "Descending";
+            Type orderByType = typeof(T).GetProperty(orderByColumn).PropertyType;
+            IOrderedEnumerable<T> Data = (IOrderedEnumerable<T>)(from method in typeof(Enumerable).GetMethods()
+                                                                 where method.Name == orderMethod && method.GetParameters().Length == 2
+                                                                 select method).Single().MakeGenericMethod(typeof(T), orderByType)
+                                                                                        .Invoke(null, new object[] { source, lambda });
             return new PagedResult<T>
             {
                 PageIndex = PageIndex,
