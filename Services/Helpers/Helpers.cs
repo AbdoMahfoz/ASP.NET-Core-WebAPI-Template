@@ -57,24 +57,72 @@ namespace Services
             }
             return res;
         }
-        public static PagedResult<T> Pagination<T, OT>(int PageIndex, int PerPage, IQueryable<T> source, Expression<Func<T, OT>> orderByColumn)
+        public static PagedResult<T> Pagination<T, OT>(int PageIndex, int PerPage, IQueryable<T> source, 
+            Expression<Func<T, OT>> orderByColumn, bool IsAscending)
         {
+            IOrderedQueryable<T> Data;
+            if (IsAscending) Data = source.OrderBy(orderByColumn);
+            else Data = source.OrderByDescending(orderByColumn);
             return new PagedResult<T>
             {
                 PageIndex = PageIndex,
                 PerPage = PerPage,
                 TotalPageCount = (int)Math.Ceiling((double)source.Count() / PerPage),
-                Data = source.OrderBy(orderByColumn).Skip(PageIndex * PerPage).Take(PerPage)
+                Data = Data.Skip(PageIndex * PerPage).Take(PerPage)
             };
         }
-        public static PagedResult<T> Pagination<T, OT>(int PageIndex, int PerPage, IEnumerable<T> source, Func<T, OT> orderByColumn)
+        public static PagedResult<T> Pagination<T, OT>(int PageIndex, int PerPage, IEnumerable<T> source, 
+            Func<T, OT> orderByColumn, bool IsAscending)
         {
+            IOrderedEnumerable<T> Data;
+            if (IsAscending) Data = source.OrderBy(orderByColumn);
+            else Data = source.OrderByDescending(orderByColumn);
             return new PagedResult<T>
             {
                 PageIndex = PageIndex,
                 PerPage = PerPage,
                 TotalPageCount = (int)Math.Ceiling((double)source.Count() / PerPage),
-                Data = source.OrderBy(orderByColumn).Skip(PageIndex * PerPage).Take(PerPage)
+                Data = Data.Skip(PageIndex * PerPage).Take(PerPage)
+            };
+        }
+        public static PagedResult<T> Pagination<T>(int PageIndex, int PerPage, IQueryable<T> source, string orderByColumn, bool IsAscending)
+        {
+            var parameter = Expression.Parameter(typeof(T), "u");
+            var val = Expression.Property(parameter, orderByColumn);
+            var lambda = Expression.Lambda<Func<T, object>>(val, parameter);
+            var comparerType = typeof(Comparer<>).MakeGenericType(typeof(T).GetProperty(orderByColumn).PropertyType);
+            IComparer<object> comparer = (IComparer<object>)comparerType
+                                                           .GetProperty("Default", BindingFlags.Public | BindingFlags.Static)
+                                                           .GetValue(null);
+            IOrderedQueryable<T> Data;
+            if (IsAscending) Data = source.OrderBy(lambda, comparer);
+            else Data = source.OrderByDescending(lambda, comparer);
+            return new PagedResult<T>
+            {
+                PageIndex = PageIndex,
+                PerPage = PerPage,
+                TotalPageCount = (int)Math.Ceiling((double)source.Count() / PerPage),
+                Data = Data.Skip(PageIndex * PerPage).Take(PerPage)
+            };
+        }
+        public static PagedResult<T> Pagination<T>(int PageIndex, int PerPage, IEnumerable<T> source, string orderByColumn, bool IsAscending)
+        {
+            var parameter = Expression.Parameter(typeof(T), "u");
+            var val = Expression.Property(parameter, orderByColumn);
+            var lambda = Expression.Lambda<Func<T, object>>(val, parameter).Compile();
+            var comparerType = typeof(Comparer<>).MakeGenericType(typeof(T).GetProperty(orderByColumn).PropertyType);
+            IComparer<object> comparer = (IComparer<object>)comparerType
+                                                           .GetProperty("Default", BindingFlags.Public | BindingFlags.Static)
+                                                           .GetValue(null);
+            IOrderedEnumerable<T> Data;
+            if (IsAscending) Data = source.OrderBy(lambda, comparer);
+            else Data = source.OrderByDescending(lambda, comparer);
+            return new PagedResult<T>
+            {
+                PageIndex = PageIndex,
+                PerPage = PerPage,
+                TotalPageCount = (int)Math.Ceiling((double)source.Count() / PerPage),
+                Data = Data.Skip(PageIndex * PerPage).Take(PerPage)
             };
         }
     }
