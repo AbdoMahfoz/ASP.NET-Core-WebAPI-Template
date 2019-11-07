@@ -118,6 +118,8 @@ namespace WebAPI
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IPermissionsRepository, PermissionsRepository>();
+            services.AddScoped<IRolesRepository, RolesRepository>();
             services.AddTransient<IAuth, JwtAuthorization>();
             services.AddTransient<IValidator<UserAuthenticationRequest>, UserAuthenticationRequestValidator>();
             services.AddTransient<IMailService, SMTPMailService>();
