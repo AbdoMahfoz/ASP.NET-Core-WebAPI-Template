@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 using Models.DataModels;
 using Models.Helpers;
 using Newtonsoft.Json;
@@ -12,6 +11,10 @@ namespace Models
     {
         public static string LocalDatabaseName {get; set;}
         public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<Permission> Permissions { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
         public ApplicationDbContext() { }
         protected override void OnConfiguring(DbContextOptionsBuilder options)
