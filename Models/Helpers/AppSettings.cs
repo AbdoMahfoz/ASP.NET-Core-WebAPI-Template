@@ -26,5 +26,6 @@
         public string Secret { get; set; }
         public int TokenExpirationMinutes { get; set; }
         public string LocalDatabaseName { get; set; }
+        public bool ValidateRolesFromToken { get; set; }
     }
 }

@@ -26,6 +26,7 @@ using Repository;
 using Repository.ExtendedRepositories;
 using Services.DTOs;
 using Services.MailService;
+using Services.RoleSystem;
 using Services.Validators;
 using Swashbuckle.AspNetCore.Swagger;
 using WebAPI.Middleware;
@@ -125,6 +126,9 @@ namespace WebAPI
             services.AddTransient<IMailService, SMTPMailService>();
             services.AddScoped<IAuthorizationHandler, LoginHandler>();
             services.AddSingleton<IPasswordManager, RFC2898PasswordManager>();
+
+            if(appSettings.ValidateRolesFromToken) services.AddSingleton<IRoleValidator, TokenRoleValidator>();
+            else services.AddScoped<IRoleValidator, DbRoleValidator>();
 
             using (ApplicationDbContext db = new ApplicationDbContext())
             {

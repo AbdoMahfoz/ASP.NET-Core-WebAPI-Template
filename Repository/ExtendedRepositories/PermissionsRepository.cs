@@ -62,19 +62,19 @@ namespace Repository.ExtendedRepositories
         }
         public IQueryable<Permission> GetPermissionsOfUser(int UserId)
         {
-            return from roleUser in UserRoleRepository.GetAll()
-                   join permissionRole in RolePermissionRepository.GetAll()
-                   on roleUser.RoleId equals permissionRole.RoleId
-                   where roleUser.UserId == UserId
-                   select permissionRole.Permission;
+            return (from roleUser in UserRoleRepository.GetAll()
+                    join permissionRole in RolePermissionRepository.GetAll()
+                    on roleUser.RoleId equals permissionRole.RoleId
+                    where roleUser.UserId == UserId
+                    select permissionRole.Permission).Distinct();
         }
         public IQueryable<Permission> GetPermissionsOfUser(string Username)
         {
-            return from roleUser in UserRoleRepository.GetAll()
-                   join permissionRole in RolePermissionRepository.GetAll()
-                   on roleUser.RoleId equals permissionRole.RoleId
-                   where roleUser.User.UserName == Username
-                   select permissionRole.Permission;
+            return (from roleUser in UserRoleRepository.GetAll()
+                    join permissionRole in RolePermissionRepository.GetAll()
+                    on roleUser.RoleId equals permissionRole.RoleId
+                    where roleUser.User.UserName == Username
+                    select permissionRole.Permission).Distinct();
         }
         public bool UserHasPermission(string Username, string Permission)
         {
