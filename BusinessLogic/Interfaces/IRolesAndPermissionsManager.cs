@@ -1,16 +1,16 @@
-﻿using Models.DataModels;
-using System.Linq;
+﻿using System.Linq;
+using Models.DataModels;
 
 namespace BusinessLogic.Interfaces
 {
     public interface IRolesAndPermissionsManager
     {
         IQueryable<Role> GetAllRoles();
-        void InsertRole(Role newRole);
+        Role InsertRole(Role newRole);
         void DeleteRole(int id);
 
         IQueryable<Permission> GetAllPermissions();
-        void InsertPermission(Permission newPermission);
+        Permission InsertPermission(Permission newPermission);
         void DeletePermission(int id);
 
         IQueryable<Permission> GetPermissionsOfRole(string roleName);
@@ -20,6 +20,5 @@ namespace BusinessLogic.Interfaces
 
         void AssignRoleToUser(string roleName, int userId);
         void RemoveRoleFromUser(string roleName, int userId);
-
     }
 }
