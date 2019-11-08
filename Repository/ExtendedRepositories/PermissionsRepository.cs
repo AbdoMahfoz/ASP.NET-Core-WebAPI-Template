@@ -23,7 +23,7 @@ namespace Repository.ExtendedRepositories
         private readonly IRepository<UserRole> UserRoleRepository;
         private readonly IRolesRepository RolesRepository;
         public PermissionsRepository(ApplicationDbContext db, ILogger<PermissionsRepository> logger,
-            IRepository<RolePermission> RolePermissionRepository, IRolesRepository RolesRepository, IRepository<UserRole> UserRoleRepository) 
+            IRepository<RolePermission> RolePermissionRepository, IRolesRepository RolesRepository, IRepository<UserRole> UserRoleRepository)
             : base(db, logger)
         {
             this.RolePermissionRepository = RolePermissionRepository;
