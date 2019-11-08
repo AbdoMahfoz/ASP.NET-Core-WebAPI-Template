@@ -14,8 +14,10 @@ namespace Repository.ExtendedRepositories
         IQueryable<Permission> GetPermissionsOfUser(string Username);
         void AssignPermissionToRole(string Permission, string Role);
         void AssignPermissionToRole(string Permission, int RoleId);
+        void AssignPermissionToRole(int PermisionId, int RoleId);
         bool UserHasPermission(string Username, string Permission);
         bool UserHasPermission(int UserId, string Permission);
+        bool UserHasPermission(int UserId, int PermissionId);
     }
     public class PermissionsRepository : Repository<Permission>, IPermissionsRepository
     {
@@ -40,6 +42,14 @@ namespace Repository.ExtendedRepositories
             {
                 RoleId = RoleId,
                 PermissionId = GetPermission(Permission).Id
+            });
+        }
+        public void AssignPermissionToRole(int PermisionId, int RoleId)
+        {
+            RolePermissionRepository.Insert(new RolePermission
+            {
+                RoleId = RoleId,
+                PermissionId = PermisionId
             });
         }
         public Permission GetPermission(string Name)
@@ -82,7 +92,7 @@ namespace Repository.ExtendedRepositories
                     join permissionRole in RolePermissionRepository.GetAll()
                     on roleUser.RoleId equals permissionRole.RoleId
                     where roleUser.User.UserName == Username && permissionRole.Permission.Name == Permission
-                    select permissionRole.Permission).Any();
+                    select permissionRole).Any();
         }
         public bool UserHasPermission(int UserId, string Permission)
         {
@@ -90,7 +100,15 @@ namespace Repository.ExtendedRepositories
                     join permissionRole in RolePermissionRepository.GetAll()
                     on roleUser.RoleId equals permissionRole.RoleId
                     where roleUser.UserId == UserId && permissionRole.Permission.Name == Permission
-                    select permissionRole.Permission).Any();
+                    select permissionRole).Any();
+        }
+        public bool UserHasPermission(int UserId, int PermissionId)
+        {
+            return (from roleUser in UserRoleRepository.GetAll()
+                    join permissionRole in RolePermissionRepository.GetAll()
+                    on roleUser.RoleId equals permissionRole.RoleId
+                    where roleUser.UserId == UserId && permissionRole.PermissionId == PermissionId
+                    select permissionRole).Any();
         }
     }
 }
