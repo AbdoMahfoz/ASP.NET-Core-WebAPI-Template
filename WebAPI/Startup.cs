@@ -121,13 +121,19 @@ namespace WebAPI
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IPermissionsRepository, PermissionsRepository>();
             services.AddScoped<IRolesRepository, RolesRepository>();
+
+            services.AddScoped<IAuthorizationHandler, LoginHandler>();
+
             services.AddTransient<IAuth, JwtAuthorization>();
             services.AddTransient<IValidator<UserAuthenticationRequest>, UserAuthenticationRequestValidator>();
             services.AddTransient<IMailService, SMTPMailService>();
-            services.AddScoped<IAuthorizationHandler, LoginHandler>();
+            services.AddTransient<IRolesAndPermissionsManager, RolesAndPermissionsManager>();
+
+
             services.AddSingleton<IPasswordManager, RFC2898PasswordManager>();
 
-            if(appSettings.ValidateRolesFromToken) services.AddSingleton<IRoleValidator, TokenRoleValidator>();
+
+            if (appSettings.ValidateRolesFromToken) services.AddSingleton<IRoleValidator, TokenRoleValidator>();
             else services.AddScoped<IRoleValidator, DbRoleValidator>();
 
             using (ApplicationDbContext db = new ApplicationDbContext())

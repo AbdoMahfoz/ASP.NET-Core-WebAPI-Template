@@ -1,5 +1,4 @@
-﻿
-namespace Models.DataModels
+﻿namespace Models.DataModels
 {
     public class Permission : BaseModel
     {
