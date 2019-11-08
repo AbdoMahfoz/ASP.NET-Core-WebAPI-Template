@@ -14,6 +14,7 @@ namespace Repository.ExtendedRepositories
         IQueryable<Permission> GetPermissionsOfUser(string Username);
         void AssignPermissionToRole(string Permission, string Role);
         void AssignPermissionToRole(string Permission, int RoleId);
+        void RemovePermissionFromRole(string Permission, int RoleId);
         bool UserHasPermission(string Username, string Permission);
         bool UserHasPermission(int UserId, string Permission);
     }
@@ -42,6 +43,13 @@ namespace Repository.ExtendedRepositories
                 PermissionId = GetPermission(Permission).Id
             });
         }
+
+        public void RemovePermissionFromRole(string Permission, int RoleId)
+        {
+            var userRole = RolePermissionRepository.GetAll().Where(x => x.Permission.Name == Permission && x.Role.Id == RoleId).FirstOrDefault();
+            RolePermissionRepository.SoftDelete(userRole);
+        }
+
         public Permission GetPermission(string Name)
         {
             return (from permission in GetAll()

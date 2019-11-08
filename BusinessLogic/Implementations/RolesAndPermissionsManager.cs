@@ -13,10 +13,12 @@ namespace BusinessLogic.Implementations
     {
         private readonly IPermissionsRepository _permissionsRepo;
         private readonly IRolesRepository _rolesRepo;
-        public RolesAndPermissionsManager(IPermissionsRepository permissionsRepo, IRolesRepository rolesRepo)
+        private readonly IUserRepository _userRepo;
+        public RolesAndPermissionsManager(IPermissionsRepository permissionsRepo, IRolesRepository rolesRepo, IUserRepository userRepo)
         {
             _permissionsRepo = permissionsRepo;
             _rolesRepo = rolesRepo;
+            _userRepo = userRepo;
         }
         public IQueryable<Role> GetAllRoles()
         {
@@ -75,17 +77,34 @@ namespace BusinessLogic.Implementations
 
         public void RemovePermissionFromRole(string roleName, string permissionName)
         {
-            throw new NotImplementedException();
+            var role = _rolesRepo.GetRole(roleName);
+            if (role == null) throw new NullReferenceException($"Role {roleName} Doesn't Exist to remove its Permissions");
+
+            var permission = _permissionsRepo.GetPermission(permissionName);
+            if (permission == null) throw new NullReferenceException($"Permission {permissionName} Doesn't Exist to be removed from a Role");
+
+            _permissionsRepo.RemovePermissionFromRole(permissionName, role.Id);
         }
 
         public void AssignRoleToUser(string roleName, int userId)
         {
-            throw new NotImplementedException();
+            var role = _rolesRepo.GetRole(roleName);
+            if (role == null) throw new NullReferenceException($"Role {roleName} Doesn't Exist to assign Permissions to.");
+
+            var user = _userRepo.Get(userId);
+            if (user == null) throw new NullReferenceException("User Doesn't Exist to be assigned a Role");
+
+            _rolesRepo.AssignRoleToUser(roleName, userId);
         }
 
         public void RemoveRoleFromUser(string roleName, int userId)
         {
-            throw new NotImplementedException();
+            var role = _rolesRepo.GetRole(roleName);
+            if (role == null) throw new NullReferenceException($"Role {roleName} Doesn't Exist to assign Permissions to.");
+
+            var user = _userRepo.Get(userId);
+            if (user == null) throw new NullReferenceException("User Doesn't Exist to be assigned a Role");
+            _rolesRepo.RemoveRoleFormUser(roleName, userId);
         }
     }
 }
