@@ -15,6 +15,8 @@ namespace Models
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
+        public DbSet<ActionRole> ActionRoles { get; set; }
+        public DbSet<ActionPermission> ActionPermissions { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
         public ApplicationDbContext() { }
         protected override void OnConfiguring(DbContextOptionsBuilder options)

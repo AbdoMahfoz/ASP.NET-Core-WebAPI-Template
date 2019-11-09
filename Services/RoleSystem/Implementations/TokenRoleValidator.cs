@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Security.Claims;
 using Services.Extensions;
+using Services.RoleSystem.Interfaces;
 
-namespace Services.RoleSystem
+namespace Services.RoleSystem.Implementations
 {
     public class TokenRoleValidator : IRoleValidator
     {

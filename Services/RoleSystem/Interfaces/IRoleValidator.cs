@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace Services.RoleSystem
+namespace Services.RoleSystem.Interfaces
 {
     public interface IRoleValidator
     {
