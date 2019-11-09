@@ -3,8 +3,9 @@ using System.Security.Claims;
 using Services.Extensions;
 using System.Linq;
 using Repository.ExtendedRepositories;
+using Services.RoleSystem.Interfaces;
 
-namespace Services.RoleSystem
+namespace Services.RoleSystem.Implementations
 {
     public class DbRoleValidator : IRoleValidator
     {

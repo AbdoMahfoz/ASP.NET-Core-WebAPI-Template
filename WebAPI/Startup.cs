@@ -27,6 +27,8 @@ using Repository.ExtendedRepositories;
 using Services.DTOs;
 using Services.MailService;
 using Services.RoleSystem;
+using Services.RoleSystem.Implementations;
+using Services.RoleSystem.Interfaces;
 using Services.Validators;
 using Swashbuckle.AspNetCore.Swagger;
 using WebAPI.Middleware;
@@ -50,6 +52,7 @@ namespace WebAPI
             services.AddMvc(opt =>
             {
                 opt.Filters.Add(typeof(ValidatorActionFilter));
+                opt.Filters.Add(typeof(RoleActionFilter));
             })
             .AddJsonOptions(options =>
             {
@@ -118,11 +121,15 @@ namespace WebAPI
             });
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            services.AddScoped(typeof(ICachedRepository<>), typeof(CachedRepository<>));
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IPermissionsRepository, PermissionsRepository>();
             services.AddScoped<IRolesRepository, RolesRepository>();
 
             services.AddScoped<IAuthorizationHandler, LoginHandler>();
+            services.AddScoped<IActionPermissionRepository, ActionPermissionRepository>();
+            services.AddScoped<IActionRolesRepository, ActionRolesRepository>();
+            services.AddScoped<IActionRoleManager, ActionRoleManager>();
 
             services.AddTransient<IAuth, JwtAuthorization>();
             services.AddTransient<IValidator<UserAuthenticationRequest>, UserAuthenticationRequestValidator>();
