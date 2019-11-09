@@ -15,6 +15,7 @@ namespace Repository.ExtendedRepositories
         void AssignPermissionToRole(string Permission, string Role);
         void AssignPermissionToRole(string Permission, int RoleId);
         void RemovePermissionFromRole(string Permission, int RoleId);
+        void RemovePermissionFromRole(string Permission, string roleName);
         bool UserHasPermission(string Username, string Permission);
         bool UserHasPermission(int UserId, string Permission);
     }
@@ -99,6 +100,12 @@ namespace Repository.ExtendedRepositories
                     on roleUser.RoleId equals permissionRole.RoleId
                     where roleUser.UserId == UserId && permissionRole.Permission.Name == Permission
                     select permissionRole.Permission).Any();
+        }
+
+        public void RemovePermissionFromRole(string Permission, string roleName)
+        {
+            var userRole = RolePermissionRepository.GetAll().Where(x => x.Permission.Name == Permission && x.Role.Name == roleName).FirstOrDefault();
+            RolePermissionRepository.SoftDelete(userRole);
         }
     }
 }

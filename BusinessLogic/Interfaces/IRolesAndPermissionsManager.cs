@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 using Models.DataModels;
 
 namespace BusinessLogic.Interfaces
@@ -6,11 +7,11 @@ namespace BusinessLogic.Interfaces
     public interface IRolesAndPermissionsManager
     {
         IQueryable<Role> GetAllRoles();
-        Role InsertRole(Role newRole);
+        Task InsertRole(Role newRole);
         void DeleteRole(int id);
 
         IQueryable<Permission> GetAllPermissions();
-        Permission InsertPermission(Permission newPermission);
+        Task InsertPermission(Permission newPermission);
         void DeletePermission(int id);
 
         IQueryable<Permission> GetPermissionsOfRole(string roleName);
