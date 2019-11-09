@@ -11,12 +11,16 @@ namespace Repository
     {
         public CachedRepository(ApplicationDbContext db, ILogger<CachedRepository<T>> logger) : base(db, logger) { }
         private static Dictionary<int, T> cache;
+        private readonly static object cacheLock = new object();
         private Dictionary<int, T> Cache
         {
             get
             {
-                if (cache == null) InitializeCache();
-                return cache;
+                lock (cacheLock)
+                {
+                    if (cache == null) InitializeCache();
+                    return cache;
+                }
             }
         }
         private void InitializeCache()
@@ -37,53 +41,77 @@ namespace Repository
         }
         public override void HardDelete(T entity)
         {
-            Cache.Remove(entity.Id);
+            lock(Cache)
+            {
+                Cache.Remove(entity.Id);
+            }
             base.HardDelete(entity);
         }
         public override void HardDeleteRange(IEnumerable<T> entities)
         {
-            foreach(var e in entities)
+            lock (Cache)
             {
-                Cache.Remove(e.Id);
+                foreach (var e in entities)
+                {
+                    Cache.Remove(e.Id);
+                }
             }
             base.HardDeleteRange(entities);
         }
         public override async Task Insert(T entity)
         {
             await base.Insert(entity);
-            Cache[entity.Id] = entity;
+            lock(Cache)
+            {
+                Cache[entity.Id] = entity;
+            }
         }
         public override async Task InsertRange(IEnumerable<T> entities)
         {
             await base.InsertRange(entities);
-            foreach(var e in entities)
+            lock (Cache)
             {
-                Cache[e.Id] = e;
+                foreach (var e in entities)
+                {
+                    Cache[e.Id] = e;
+                }
             }
         }
         public override void SoftDelete(T entity)
         {
-            Cache.Remove(entity.Id);
+            lock(Cache)
+            {
+                Cache.Remove(entity.Id);
+            }
             base.SoftDelete(entity);
         }
         public override void SoftDeleteRange(IEnumerable<T> entities)
         {
-            foreach(var e in entities)
+            lock (Cache)
             {
-                Cache.Remove(e.Id);
+                foreach (var e in entities)
+                {
+                    Cache.Remove(e.Id);
+                }
             }
             base.SoftDeleteRange(entities);
         }
         public override void Update(T entity)
         {
-            Cache[entity.Id] = entity;
+            lock(Cache)
+            {
+                Cache[entity.Id] = entity;
+            }
             base.Update(entity);
         }
         public override void UpdateRange(IEnumerable<T> entities)
         {
-            foreach(var e in entities)
+            lock(Cache)
             {
-                Cache[e.Id] = e;
+                foreach(var e in entities)
+                {
+                    Cache[e.Id] = e;
+                }
             }
             base.UpdateRange(entities);
         }
