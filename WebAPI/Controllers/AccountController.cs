@@ -18,11 +18,13 @@ namespace WebAPI.Controllers
     public class AccountController : ControllerBase
     {
         private readonly IAuth Auth;
+        private readonly IAccountLogic AccountLogic;
         private readonly IOptions<AppSettings> options;
-        public AccountController(IOptions<AppSettings> options, IAuth Auth)
+        public AccountController(IOptions<AppSettings> options, IAuth Auth, IAccountLogic AccountLogic)
         {
             this.Auth = Auth;
             this.options = options;
+            this.AccountLogic = AccountLogic;
         }
         /// <summary>
         /// The only official way to get an access token for this API
@@ -70,7 +72,7 @@ namespace WebAPI.Controllers
         [HttpPost("Register")]
         public IActionResult Register([FromBody]UserAuthenticationRequest request)
         {
-            if (Auth.Register(request, "User"))
+            if (AccountLogic.Register(request, "User"))
                 return Ok();
             return StatusCode(StatusCodes.Status409Conflict);
         }
