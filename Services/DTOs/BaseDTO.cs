@@ -6,6 +6,7 @@ namespace Services.DTOs
     public class BaseDTO
     {
         public string Id { get; set; }
+        public DateTime AddedDate { get; set; }
     }
     public class PagedResult<T>
     {

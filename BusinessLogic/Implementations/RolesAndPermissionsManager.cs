@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using BusinessLogic.Interfaces;
 using Models.DataModels;
 using Repository.ExtendedRepositories;
 using Services;
+using Services.DTOs;
 
 namespace BusinessLogic.Implementations
 {
@@ -13,26 +13,25 @@ namespace BusinessLogic.Implementations
     {
         private readonly IPermissionsRepository _permissionsRepo;
         private readonly IRolesRepository _rolesRepo;
-        private readonly IUserRepository _userRepo;
 
-        public RolesAndPermissionsManager(IPermissionsRepository permissionsRepo, IRolesRepository rolesRepo,
-            IUserRepository userRepo)
+        public RolesAndPermissionsManager(IPermissionsRepository permissionsRepo, IRolesRepository rolesRepo)
         {
             _permissionsRepo = permissionsRepo;
             _rolesRepo = rolesRepo;
-            _userRepo = userRepo;
         }
 
-        public IQueryable<Role> GetAllRoles()
+        public IQueryable<RoleDTO> GetAllRoles()
         {
-            return _rolesRepo.GetAll();
+            return _rolesRepo.GetAll().Select(u => Helpers.MapTo<RoleDTO>(u));
         }
 
-        public Task InsertRole(Role newRole)
+        public int InsertRole(RoleDTO newRole)
         {
             if (Helpers.HasNullOrEmptyStrings(newRole))
                 throw new Exception("The New Role To be added Contains null values");
-            return _rolesRepo.Insert(newRole);
+            Role role = Helpers.MapTo<Role>(newRole);
+            _rolesRepo.Insert(role).Wait();
+            return role.Id;
         }
 
         public void DeleteRole(int id)
@@ -42,16 +41,18 @@ namespace BusinessLogic.Implementations
             _rolesRepo.SoftDelete(role);
         }
 
-        public IQueryable<Permission> GetAllPermissions()
+        public IQueryable<PermissionDTO> GetAllPermissions()
         {
-            return _permissionsRepo.GetAll();
+            return _permissionsRepo.GetAll().Select(x => Helpers.MapTo<PermissionDTO>(x));
         }
 
-        public Task InsertPermission(Permission newPermission)
+        public int InsertPermission(PermissionDTO newPermission)
         {
             if (Helpers.HasNullOrEmptyStrings(newPermission))
                 throw new Exception("The New Permission To be added Contains null values");
-            return _permissionsRepo.Insert(newPermission);
+            Permission permission = Helpers.MapTo<Permission>(newPermission);
+            _permissionsRepo.Insert(permission).Wait();
+            return permission.Id;
         }
 
         public void DeletePermission(int id)
@@ -61,9 +62,9 @@ namespace BusinessLogic.Implementations
             _permissionsRepo.SoftDelete(permission);
         }
 
-        public IQueryable<Permission> GetPermissionsOfRole(string roleName)
+        public IQueryable<PermissionDTO> GetPermissionsOfRole(string roleName)
         {
-            return _permissionsRepo.GetPermissionsOfRole(roleName);
+            return _permissionsRepo.GetPermissionsOfRole(roleName).Select(x => Helpers.MapTo<PermissionDTO>(x));
         }
 
         public void AssignPermissionToRole(string roleName, string permissionName)
@@ -85,6 +86,26 @@ namespace BusinessLogic.Implementations
         public void RemoveRoleFromUser(string roleName, int userId)
         {
             _rolesRepo.RemoveRoleFormUser(roleName, userId);
+        }
+
+        public RoleDTO GetRoleById(int roleId)
+        {
+            return Helpers.MapTo<RoleDTO>(_rolesRepo.Get(roleId));
+        }
+
+        public RoleDTO GetRoleByName(string roleName)
+        {
+            return Helpers.MapTo<RoleDTO>(_rolesRepo.GetRole(roleName));
+        }
+
+        public PermissionDTO GetPermissionById(int permissionId)
+        {
+            return Helpers.MapTo<PermissionDTO>(_permissionsRepo.Get(permissionId));
+        }
+
+        public PermissionDTO GetPermissionByName(string permissionName)
+        {
+            return Helpers.MapTo<PermissionDTO>(_permissionsRepo.GetPermission(permissionName));
         }
     }
 }

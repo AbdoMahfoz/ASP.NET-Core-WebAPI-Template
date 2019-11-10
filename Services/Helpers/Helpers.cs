@@ -40,17 +40,17 @@ namespace Services
         {
             T res = new T();
             Dictionary<string, PropertyInfo> OutProps = new Dictionary<string, PropertyInfo>();
-            foreach(var property in typeof(T).GetProperties())
+            foreach (var property in typeof(T).GetProperties())
             {
-                if(property.CanRead)
+                if (property.CanRead)
                 {
                     OutProps.Add(property.Name, property);
                 }
             }
-            foreach(var InProp in obj.GetType().GetProperties())
+            foreach (var InProp in obj.GetType().GetProperties())
             {
                 PropertyInfo OutProp;
-                if(InProp.CanRead && OutProps.TryGetValue(InProp.Name, out OutProp))
+                if (InProp.CanRead && OutProps.TryGetValue(InProp.Name, out OutProp))
                 {
                     OutProp.SetValue(res, InProp.GetValue(obj));
                 }
