@@ -71,25 +71,6 @@ namespace WebAPI.Controllers
         }
 
         /// <summary>
-        ///     Gets the Role By Id
-        /// </summary>
-        /// <remarks>
-        ///     Id must be greater than 0
-        /// </remarks>
-        /// <param name="roleId">Role Id</param>
-        /// <response code="500">Role Id is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200">Role</response>
-        [ProducesResponseType(200, Type = typeof(Role))]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpGet("GetRoleById")]
-        public IActionResult GetPermissionsOfRole(int roleId)
-        {
-            return StatusCode(StatusCodes.Status200OK, _rolesAndPermissionsManager.GetRoleById(roleId));
-        }
-
-        /// <summary>
         ///     Insert a new role in the DB
         /// </summary>
         /// <remarks>
@@ -127,66 +108,49 @@ namespace WebAPI.Controllers
             return StatusCode(StatusCodes.Status202Accepted);
         }
 
-        /// <summary>
-        ///     Gets the Permissions Of Role
-        /// </summary>
-        /// <remarks>
-        ///     Please Make sure to spell the rolename correctly
-        /// </remarks>
-        /// <param name="roleName">Role Name</param>
-        /// <response code="500">Role name is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200">Role's Permission</response>
-        [ProducesResponseType(201, Type = typeof(IEnumerable<Permission>))]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpGet("GetPermissionsOfRole")]
-        public IActionResult GetPermissionsOfRole(string roleName)
-        {
-            return StatusCode(StatusCodes.Status200OK, _rolesAndPermissionsManager.GetPermissionsOfRole(roleName).ToList());
-        }
 
         /// <summary>
-        ///     Assignes permission to Role
+        ///     Assigns Role to User
         /// </summary>
         /// <remarks>
-        ///     Please Make sure to spell the rolename and permission correctly
+        ///     Please Make sure to spell the rolename and userId correctly
         /// </remarks>
         /// <param name="roleName">Role Name</param>
-        /// <param name="permissionName">Permission Name</param>
-        /// <response code="500">Role or Permission name is not correct </response>
+        /// <param name="userId">User's Id</param>
+        /// <response code="500">RoleName or UserId is not correct </response>
         /// <response code="403">UnAuthorized Access </response>
         /// <response code="200"></response>
         [ProducesResponseType(201, Type = null)]
         [ProducesResponseType(403, Type = null)]
         [ProducesResponseType(500, Type = null)]
-        [HttpGet("AssignPermissionToRole")]
-        public IActionResult AssignPermissionToRole(string roleName, string permissionName)
+        [HttpGet("AssignRoleToUser")]
+        public IActionResult AssignRoleToUser(string roleName, int userId)
         {
-            _rolesAndPermissionsManager.AssignPermissionToRole(roleName, permissionName);
+            _rolesAndPermissionsManager.AssignRoleToUser(roleName, userId);
             return StatusCode(StatusCodes.Status200OK);
         }
 
         /// <summary>
-        ///     Removes permission to Role
+        ///     removes Role from User
         /// </summary>
         /// <remarks>
-        ///     Please Make sure to spell the rolename and permission correctly
+        ///     Please Make sure to spell the rolename and userId correctly
         /// </remarks>
         /// <param name="roleName">Role Name</param>
-        /// <param name="permissionName">Permission Name</param>
-        /// <response code="500">Role or Permission name is not correct </response>
+        /// <param name="userId">User's Id</param>
+        /// <response code="500">RoleName or UserId is not correct </response>
         /// <response code="403">UnAuthorized Access </response>
         /// <response code="200"></response>
         [ProducesResponseType(201, Type = null)]
         [ProducesResponseType(403, Type = null)]
         [ProducesResponseType(500, Type = null)]
-        [HttpGet("RemovePermissionFromRole")]
-        public IActionResult RemovePermissionFromRole(string roleName, string permissionName)
+        [HttpGet("RemoveRoleFromUser")]
+        public IActionResult RemoveRoleFromUser(string roleName, int userId)
         {
-            _rolesAndPermissionsManager.RemovePermissionFromRole(roleName, permissionName);
+            _rolesAndPermissionsManager.RemoveRoleFromUser(roleName, userId);
             return StatusCode(StatusCodes.Status200OK);
         }
+
 
         /// <summary>
         ///     Get All Available Permissions
@@ -274,44 +238,64 @@ namespace WebAPI.Controllers
         }
 
         /// <summary>
-        ///     Assignes Role to User
+        ///     Gets the Permissions Of Role
         /// </summary>
         /// <remarks>
-        ///     Please Make sure to spell the rolename and userId correctly
+        ///     Please Make sure to spell the rolename correctly
         /// </remarks>
         /// <param name="roleName">Role Name</param>
-        /// <param name="userId">User's Id</param>
-        /// <response code="500">RoleName or UserId is not correct </response>
+        /// <response code="500">Role name is not correct </response>
+        /// <response code="403">UnAuthorized Access </response>
+        /// <response code="200">Role's Permission</response>
+        [ProducesResponseType(201, Type = typeof(IEnumerable<Permission>))]
+        [ProducesResponseType(403, Type = null)]
+        [ProducesResponseType(500, Type = null)]
+        [HttpGet("GetPermissionsOfRole")]
+        public IActionResult GetPermissionsOfRole(string roleName)
+        {
+            return StatusCode(StatusCodes.Status200OK,
+                _rolesAndPermissionsManager.GetPermissionsOfRole(roleName).ToList());
+        }
+
+        /// <summary>
+        ///     Assigns permission to Role
+        /// </summary>
+        /// <remarks>
+        ///     Please Make sure to spell the rolename and permission correctly
+        /// </remarks>
+        /// <param name="roleName">Role Name</param>
+        /// <param name="permissionName">Permission Name</param>
+        /// <response code="500">Role or Permission name is not correct </response>
         /// <response code="403">UnAuthorized Access </response>
         /// <response code="200"></response>
         [ProducesResponseType(201, Type = null)]
         [ProducesResponseType(403, Type = null)]
         [ProducesResponseType(500, Type = null)]
-        [HttpGet("AssignRoleToUser")]
-        public IActionResult AssignRoleToUser(string roleName, int userId)
+        [HttpGet("AssignPermissionToRole")]
+        public IActionResult AssignPermissionToRole(string roleName, string permissionName)
         {
-            _rolesAndPermissionsManager.AssignRoleToUser(roleName, userId);
+            _rolesAndPermissionsManager.AssignPermissionToRole(roleName, permissionName);
             return StatusCode(StatusCodes.Status200OK);
         }
 
         /// <summary>
-        ///     removes Role from User
+        ///     Removes permission to Role
         /// </summary>
         /// <remarks>
-        ///     Please Make sure to spell the rolename and userId correctly
+        ///     Please Make sure to spell the rolename and permission correctly
         /// </remarks>
         /// <param name="roleName">Role Name</param>
-        /// <param name="userId">User's Id</param>
-        /// <response code="500">RoleName or UserId is not correct </response>
+        /// <param name="permissionName">Permission Name</param>
+        /// <response code="500">Role or Permission name is not correct </response>
         /// <response code="403">UnAuthorized Access </response>
         /// <response code="200"></response>
         [ProducesResponseType(201, Type = null)]
         [ProducesResponseType(403, Type = null)]
         [ProducesResponseType(500, Type = null)]
-        [HttpGet("RemoveRoleFromUser")]
-        public IActionResult RemoveRoleFromUser(string roleName, int userId)
+        [HttpGet("RemovePermissionFromRole")]
+        public IActionResult RemovePermissionFromRole(string roleName, string permissionName)
         {
-            _rolesAndPermissionsManager.RemoveRoleFromUser(roleName, userId);
+            _rolesAndPermissionsManager.RemovePermissionFromRole(roleName, permissionName);
             return StatusCode(StatusCodes.Status200OK);
         }
     }

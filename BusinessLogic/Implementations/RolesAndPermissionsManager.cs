@@ -25,11 +25,21 @@ namespace BusinessLogic.Implementations
             return _rolesRepo.GetAll().Select(u => Helpers.MapTo<RoleDTO>(u));
         }
 
+        public RoleDTO GetRoleById(int roleId)
+        {
+            return Helpers.MapTo<RoleDTO>(_rolesRepo.Get(roleId));
+        }
+
+        public RoleDTO GetRoleByName(string roleName)
+        {
+            return Helpers.MapTo<RoleDTO>(_rolesRepo.GetRole(roleName));
+        }
+
         public int InsertRole(RoleDTO newRole)
         {
             if (Helpers.HasNullOrEmptyStrings(newRole))
                 throw new Exception("The New Role To be added Contains null values");
-            Role role = Helpers.MapTo<Role>(newRole);
+            var role = Helpers.MapTo<Role>(newRole);
             _rolesRepo.Insert(role).Wait();
             return role.Id;
         }
@@ -41,16 +51,36 @@ namespace BusinessLogic.Implementations
             _rolesRepo.SoftDelete(role);
         }
 
+        public void AssignRoleToUser(string roleName, int userId)
+        {
+            _rolesRepo.AssignRoleToUser(roleName, userId);
+        }
+
+        public void RemoveRoleFromUser(string roleName, int userId)
+        {
+            _rolesRepo.RemoveRoleFormUser(roleName, userId);
+        }
+
         public IQueryable<PermissionDTO> GetAllPermissions()
         {
             return _permissionsRepo.GetAll().Select(x => Helpers.MapTo<PermissionDTO>(x));
+        }
+
+        public PermissionDTO GetPermissionById(int permissionId)
+        {
+            return Helpers.MapTo<PermissionDTO>(_permissionsRepo.Get(permissionId));
+        }
+
+        public PermissionDTO GetPermissionByName(string permissionName)
+        {
+            return Helpers.MapTo<PermissionDTO>(_permissionsRepo.GetPermission(permissionName));
         }
 
         public int InsertPermission(PermissionDTO newPermission)
         {
             if (Helpers.HasNullOrEmptyStrings(newPermission))
                 throw new Exception("The New Permission To be added Contains null values");
-            Permission permission = Helpers.MapTo<Permission>(newPermission);
+            var permission = Helpers.MapTo<Permission>(newPermission);
             _permissionsRepo.Insert(permission).Wait();
             return permission.Id;
         }
@@ -74,38 +104,7 @@ namespace BusinessLogic.Implementations
 
         public void RemovePermissionFromRole(string roleName, string permissionName)
         {
-
             _permissionsRepo.RemovePermissionFromRole(permissionName, roleName);
-        }
-
-        public void AssignRoleToUser(string roleName, int userId)
-        {
-            _rolesRepo.AssignRoleToUser(roleName, userId);
-        }
-
-        public void RemoveRoleFromUser(string roleName, int userId)
-        {
-            _rolesRepo.RemoveRoleFormUser(roleName, userId);
-        }
-
-        public RoleDTO GetRoleById(int roleId)
-        {
-            return Helpers.MapTo<RoleDTO>(_rolesRepo.Get(roleId));
-        }
-
-        public RoleDTO GetRoleByName(string roleName)
-        {
-            return Helpers.MapTo<RoleDTO>(_rolesRepo.GetRole(roleName));
-        }
-
-        public PermissionDTO GetPermissionById(int permissionId)
-        {
-            return Helpers.MapTo<PermissionDTO>(_permissionsRepo.Get(permissionId));
-        }
-
-        public PermissionDTO GetPermissionByName(string permissionName)
-        {
-            return Helpers.MapTo<PermissionDTO>(_permissionsRepo.GetPermission(permissionName));
         }
     }
 }
