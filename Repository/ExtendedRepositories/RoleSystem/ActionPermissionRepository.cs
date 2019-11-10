@@ -10,13 +10,14 @@ namespace Repository.ExtendedRepositories
     {
         Task AssignPermissionToAction(string ActionName, string PermissionName);
         Task AssignPermissionToAction(string ActionName, int PermissionId);
+        void RemovePermissionFromAction(string ActionName, string PermissionName);
         IQueryable<Permission> GetPermissionsOfAction(string ActionName);
     }
     public class ActionPermissionRepository : CachedRepository<ActionPermission>, IActionPermissionRepository
     {
         private readonly IPermissionsRepository PermissionsRepository;
-        public ActionPermissionRepository(ApplicationDbContext db, ILogger<ActionPermissionRepository> logger, 
-            IPermissionsRepository PermissionsRepository) : base(db, logger) 
+        public ActionPermissionRepository(ApplicationDbContext db, ILogger<ActionPermissionRepository> logger,
+            IPermissionsRepository PermissionsRepository) : base(db, logger)
         {
             this.PermissionsRepository = PermissionsRepository;
         }
@@ -32,6 +33,14 @@ namespace Repository.ExtendedRepositories
                 PermissionId = PermissionId
             });
         }
+
+        public void RemovePermissionFromAction(string actionName, string PermissionName)
+        {
+            var permissionOfAction = GetAll().Where(x =>
+                x.ActionName == actionName && x.PermissionId == PermissionsRepository.GetPermission(PermissionName).Id).FirstOrDefault();
+            SoftDelete(permissionOfAction);
+        }
+
         public IQueryable<Permission> GetPermissionsOfAction(string ActionName)
         {
             return from actionPermission in GetAll()

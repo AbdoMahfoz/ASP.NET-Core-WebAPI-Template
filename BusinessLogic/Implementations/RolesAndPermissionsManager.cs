@@ -6,18 +6,22 @@ using Models.DataModels;
 using Repository.ExtendedRepositories;
 using Services;
 using Services.DTOs;
+using Services.RoleSystem.Interfaces;
 
 namespace BusinessLogic.Implementations
 {
     public class RolesAndPermissionsManager : IRolesAndPermissionsManager
     {
+        private readonly IActionRoleManager _actionRoleManagerRepo;
         private readonly IPermissionsRepository _permissionsRepo;
         private readonly IRolesRepository _rolesRepo;
 
-        public RolesAndPermissionsManager(IPermissionsRepository permissionsRepo, IRolesRepository rolesRepo)
+        public RolesAndPermissionsManager(IPermissionsRepository permissionsRepo, IRolesRepository rolesRepo,
+            IActionRoleManager actionRoleManagerRepo)
         {
             _permissionsRepo = permissionsRepo;
             _rolesRepo = rolesRepo;
+            _actionRoleManagerRepo = actionRoleManagerRepo;
         }
 
         public IQueryable<RoleDTO> GetAllRoles()
@@ -49,6 +53,16 @@ namespace BusinessLogic.Implementations
             if (id <= 0) throw new KeyNotFoundException($"id {id} doesn't exist in the Database");
             var role = _rolesRepo.Get(id);
             _rolesRepo.SoftDelete(role);
+        }
+
+        public void RegisterRoleToAction(string actionName, string roleName)
+        {
+            _actionRoleManagerRepo.RegisterRoleToAction(actionName, roleName);
+        }
+
+        public void RemoveRoleFromAction(string actionName, string roleName)
+        {
+            _actionRoleManagerRepo.RemoveRoleFromAction(actionName, roleName);
         }
 
         public void AssignRoleToUser(string roleName, int userId)
@@ -90,6 +104,16 @@ namespace BusinessLogic.Implementations
             if (id <= 0) throw new KeyNotFoundException($"id {id} doesn't exist in the Database");
             var permission = _permissionsRepo.Get(id);
             _permissionsRepo.SoftDelete(permission);
+        }
+
+        public void RegisterPermissionToAction(string actionName, string permissionName)
+        {
+            _actionRoleManagerRepo.RegisterPermissionToAction(actionName, permissionName);
+        }
+
+        public void RemovePermissionFromAction(string ActionName, string permissionName)
+        {
+            _actionRoleManagerRepo.RemovePermissionFromAction(ActionName, permissionName);
         }
 
         public IQueryable<PermissionDTO> GetPermissionsOfRole(string roleName)

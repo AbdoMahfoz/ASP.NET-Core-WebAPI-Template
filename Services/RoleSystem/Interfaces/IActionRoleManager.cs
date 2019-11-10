@@ -4,9 +4,13 @@ namespace Services.RoleSystem.Interfaces
 {
     public interface IActionRoleManager
     {
-        void RegisterRoleToAction(string ActionName, string RoleName);
-        void RegisterPermissionToAction(string ActionName, string PermissionName);
         IEnumerable<string> GetPermissionOfAction(string ActionName);
         IEnumerable<string> GetRolesOfAction(string ActionName);
+
+        void RegisterRoleToAction(string ActionName, string RoleName);
+        void RegisterPermissionToAction(string ActionName, string PermissionName);
+
+        void RemoveRoleFromAction(string ActionName, string RoleName);
+        void RemovePermissionFromAction(string ActionName, string PermissionName);
     }
 }
