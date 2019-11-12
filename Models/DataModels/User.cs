@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -14,5 +15,6 @@ namespace Models.DataModels
         public DateTime? LastLogOut { get; set; }
         [NotMapped]
         public string Token { get; set; }
+        public virtual ICollection<UserRole> UserRoles { get; set; }
     }
 }
