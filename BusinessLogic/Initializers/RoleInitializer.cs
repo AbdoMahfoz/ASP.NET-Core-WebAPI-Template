@@ -25,7 +25,7 @@ namespace BusinessLogic.Initializers
                 {
                     PermissionsRepository.Insert(new Permission { Name = "CanManageRoles" }).Wait();
                 }
-                foreach (int PermissionId in PermissionsRepository.GetAll().Select(u => u.Id))
+                foreach (int PermissionId in PermissionsRepository.GetAll().Select(u => u.Id).ToList())
                 {
                     PermissionsRepository.AssignPermissionToRole(PermissionId, admin.Id);
                 }
