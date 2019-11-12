@@ -42,7 +42,7 @@ namespace Repository.ExtendedRepositories
         public void RemoveRoleFromAction(string actionName, string RoleName)
         {
             var permissionOfAction = GetAll().Where(x =>
-                x.ActionName == actionName && x.RoleId == RolesRepository.GetRole(RoleName).Id).FirstOrDefault();
+                x.ActionName == actionName && x.Role.Name == RoleName).FirstOrDefault();
             SoftDelete(permissionOfAction);
         }
 

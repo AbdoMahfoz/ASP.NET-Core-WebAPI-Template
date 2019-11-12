@@ -37,7 +37,7 @@ namespace Repository.ExtendedRepositories
         public void RemovePermissionFromAction(string actionName, string PermissionName)
         {
             var permissionOfAction = GetAll().Where(x =>
-                x.ActionName == actionName && x.PermissionId == PermissionsRepository.GetPermission(PermissionName).Id).FirstOrDefault();
+                x.ActionName == actionName && x.Permission.Name == PermissionName).FirstOrDefault();
             SoftDelete(permissionOfAction);
         }
 

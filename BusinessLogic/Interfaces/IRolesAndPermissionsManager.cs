@@ -8,7 +8,7 @@ namespace BusinessLogic.Interfaces
         IQueryable<RoleDTO> GetAllRoles();
         RoleDTO GetRoleById(int roleId);
         RoleDTO GetRoleByName(string roleName);
-        int InsertRole(RoleDTO newRole);
+        int InsertRole(string newRole);
         void DeleteRole(int id);
         void RegisterRoleToAction(string actionName, string roleName);
         void RemoveRoleFromAction(string actionName, string roleName);
@@ -19,7 +19,7 @@ namespace BusinessLogic.Interfaces
         IQueryable<PermissionDTO> GetAllPermissions();
         PermissionDTO GetPermissionById(int permissionId);
         PermissionDTO GetPermissionByName(string permissionName);
-        int InsertPermission(PermissionDTO newPermission);
+        int InsertPermission(string newPermission);
         void DeletePermission(int id);
         void RegisterPermissionToAction(string actionName, string permissionName);
         void RemovePermissionFromAction(string actionName, string permissionName);

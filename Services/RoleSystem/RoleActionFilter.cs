@@ -16,15 +16,25 @@ namespace Services.RoleSystem
         }
         public void OnActionExecuting(ActionExecutingContext context)
         {
-            if(!RoleValidator.ValidateRoles(context.HttpContext.User, 
-                ActionManager.GetRolesOfAction(context.ActionDescriptor.DisplayName).ToArray()))
+            string[] Roles = ActionManager.GetRolesOfAction(context.ActionDescriptor.DisplayName).ToArray();
+            string[] Permissions = ActionManager.GetPermissionOfAction(context.ActionDescriptor.DisplayName).ToArray();
+            if (!context.HttpContext.User.Claims.Any())
             {
-                context.Result = new UnauthorizedResult();
+                if (Roles.Length > 0 || Permissions.Length > 0)
+                {
+                    context.Result = new UnauthorizedResult();
+                }
             }
-            if (!RoleValidator.ValidatePermissions(context.HttpContext.User, 
-                ActionManager.GetPermissionOfAction(context.ActionDescriptor.DisplayName).ToArray()))
+            else
             {
-                context.Result = new UnauthorizedResult();
+                if (!RoleValidator.ValidateRoles(context.HttpContext.User, Roles))
+                {
+                    context.Result = new UnauthorizedResult();
+                }
+                if (!RoleValidator.ValidatePermissions(context.HttpContext.User, Permissions))
+                {
+                    context.Result = new UnauthorizedResult();
+                }
             }
         }
         public void OnActionExecuted(ActionExecutedContext context)

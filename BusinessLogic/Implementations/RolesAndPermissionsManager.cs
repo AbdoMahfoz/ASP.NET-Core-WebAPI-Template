@@ -39,11 +39,13 @@ namespace BusinessLogic.Implementations
             return Helpers.MapTo<RoleDTO>(_rolesRepo.GetRole(roleName));
         }
 
-        public int InsertRole(RoleDTO newRole)
+        public int InsertRole(string newRole)
         {
             if (Helpers.HasNullOrEmptyStrings(newRole))
                 throw new Exception("The New Role To be added Contains null values");
-            var role = Helpers.MapTo<Role>(newRole);
+            if (_rolesRepo.GetAll().Where(u => u.Name == newRole).Any())
+                return -1;
+            var role = new Role { Name = newRole };
             _rolesRepo.Insert(role).Wait();
             return role.Id;
         }
@@ -90,11 +92,11 @@ namespace BusinessLogic.Implementations
             return Helpers.MapTo<PermissionDTO>(_permissionsRepo.GetPermission(permissionName));
         }
 
-        public int InsertPermission(PermissionDTO newPermission)
+        public int InsertPermission(string newPermission)
         {
             if (Helpers.HasNullOrEmptyStrings(newPermission))
                 throw new Exception("The New Permission To be added Contains null values");
-            var permission = Helpers.MapTo<Permission>(newPermission);
+            var permission = new Permission { Name = newPermission };
             _permissionsRepo.Insert(permission).Wait();
             return permission.Id;
         }

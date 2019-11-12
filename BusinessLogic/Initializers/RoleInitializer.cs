@@ -16,24 +16,16 @@ namespace BusinessLogic.Initializers
         }
         public override void Initialize()
         {
-            if(!RoleRepository.GetAll().Any())
+            if (!RoleRepository.GetAll().Any())
             {
                 RoleRepository.Insert(new Role { Name = "User" });
                 Role admin = new Role { Name = "Admin" };
-                Task.WaitAll(
-                    Task.Run(() =>
-                    {
-                        RoleRepository.Insert(admin).Wait();
-                    }),
-                    Task.Run(() =>
-                    {
-                        if(!PermissionsRepository.GetAll().Where(u => u.Name == "CanManageRoles").Any())
-                        {
-                            PermissionsRepository.Insert(new Permission { Name = "CanManageRoles" }).Wait();
-                        }
-                    })
-                );
-                foreach(int PermissionId in PermissionsRepository.GetAll().Select(u => u.Id))
+                RoleRepository.Insert(admin).Wait();
+                if (!PermissionsRepository.GetAll().Where(u => u.Name == "CanManageRoles").Any())
+                {
+                    PermissionsRepository.Insert(new Permission { Name = "CanManageRoles" }).Wait();
+                }
+                foreach (int PermissionId in PermissionsRepository.GetAll().Select(u => u.Id))
                 {
                     PermissionsRepository.AssignPermissionToRole(PermissionId, admin.Id);
                 }

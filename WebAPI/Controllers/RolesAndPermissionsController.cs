@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using BusinessLogic.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Models.DataModels;
 using Services.DTOs;
@@ -13,374 +11,219 @@ namespace WebAPI.Controllers
     [ApiController]
     public class RolesAndPermissionsController : ControllerBase
     {
-        private readonly IRolesAndPermissionsManager _rolesAndPermissionsManager;
-
-        public RolesAndPermissionsController(IRolesAndPermissionsManager rolesAndPermissionsManager)
+        private readonly IRolesAndPermissionsManager RolesAndPermissionsManager;
+        public RolesAndPermissionsController(IRolesAndPermissionsManager RolesAndPermissionsManager)
         {
-            _rolesAndPermissionsManager = rolesAndPermissionsManager;
+            this.RolesAndPermissionsManager = RolesAndPermissionsManager;
         }
-
         /// <summary>
-        ///     Get All Available Roles
+        /// Get all available roles
         /// </summary>
-        /// <response code="200"> Available Roles</response>
-        /// <response code="403">UnAuthorized Access </response>
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Role>))]
-        [ProducesResponseType(403, Type = null)]
-        [HttpGet("GetAllRoles")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<RoleDTO>))]
+        [HttpGet("Roles")]
         public IActionResult GetAllRoles()
         {
-            return StatusCode(StatusCodes.Status201Created, _rolesAndPermissionsManager.GetAllRoles().ToList());
+            return Ok(RolesAndPermissionsManager.GetAllRoles());
         }
-
         /// <summary>
-        ///     Gets the Role By Id
+        /// Gets the role by it's name or id
         /// </summary>
         /// <remarks>
-        ///     Id must be greater than 0
+        /// <b>Only provide one of these parameters</b>
         /// </remarks>
-        /// <param name="roleId">Role Id</param>
-        /// <response code="500">Role Id is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200">Role</response>
-        [ProducesResponseType(200, Type = typeof(Role))]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpGet("GetRoleById")]
-        public IActionResult GetRoleById(int roleId)
+        /// <response code="400">
+        /// One of the following happened:
+        ///   - You entered an invalid id, or an invalid role name
+        ///   - You entered both an id and a role name
+        ///   - You didn't enter any data
+        /// </response>
+        [ProducesResponseType(200, Type = typeof(RoleDTO))]
+        [ProducesResponseType(400, Type = null)]
+        [HttpGet("Roles/Get")]
+        public IActionResult GetRole(int? roleId, string roleName)
         {
-            if (roleId <= 0) return BadRequest();
-            return StatusCode(StatusCodes.Status200OK, _rolesAndPermissionsManager.GetRoleById(roleId));
+            if (roleId != null && !string.IsNullOrEmpty(roleName)) return BadRequest();
+            RoleDTO res;
+            if (roleId != null) res = RolesAndPermissionsManager.GetRoleById((int)roleId);
+            else if (!string.IsNullOrEmpty(roleName)) res = RolesAndPermissionsManager.GetRoleByName(roleName);
+            else return BadRequest();
+            if (res == null) return BadRequest();
+            else return Ok(res);
         }
-
         /// <summary>
-        ///     Gets the Role By Role's Name
+        /// Insert a new role
         /// </summary>
-        /// <param name="roleName">Role Id</param>
-        /// <response code="500">Role Name is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200">Role</response>
-        [ProducesResponseType(200, Type = typeof(Role))]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpGet("GetRoleByName")]
-        public IActionResult GetRoleByName(string roleName)
+        /// <remarks>
+        /// Roles are created without any permissions as a starter
+        /// </remarks>
+        /// <response code="400">Role name already exists or not supplied</response>
+        /// <response code="200">Role created, Id returned</response>
+        [ProducesResponseType(200, Type = typeof(int))]
+        [ProducesResponseType(400, Type = null)]
+        [HttpPost("Roles")]
+        public IActionResult InsertRole([FromQuery]string roleName)
         {
             if (string.IsNullOrEmpty(roleName)) return BadRequest();
-            return StatusCode(StatusCodes.Status200OK, _rolesAndPermissionsManager.GetRoleByName(roleName));
+            int id = RolesAndPermissionsManager.InsertRole(roleName);
+            if (id == -1) return BadRequest();
+            return Ok(id);
         }
-
         /// <summary>
-        ///     Insert a new role in the DB
+        /// Deletes a role
         /// </summary>
-        /// <remarks>
-        ///     Roles are created without any permissions as a starter
-        /// </remarks>
-        /// <param name="role">Role to be Inserted</param>
-        /// <response code="500">Role data is not correct or Already Exists</response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="201">Role Created</response>
-        [ProducesResponseType(201, Type = typeof(Role))]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpPost("InsertRole")]
-        public IActionResult InsertRole([FromBody] RoleDTO role)
-        {
-            if (role == null) return BadRequest();
-            return StatusCode(StatusCodes.Status201Created, _rolesAndPermissionsManager.InsertRole(role));
-        }
-
-        /// <summary>
-        ///     removes a role from the DB
-        /// </summary>
-        /// <param name="roleId">Role's Id to be deleted </param>
-        /// <response code="500"></response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="202">Role Deleted</response>
-        [ProducesResponseType(202, Type = null)]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpDelete("DeleteRole")]
+        [ProducesResponseType(200, Type = null)]
+        [HttpDelete("Roles")]
         public IActionResult DeleteRole(int roleId)
         {
-            if (roleId <= 0) return BadRequest();
-            _rolesAndPermissionsManager.DeleteRole(roleId);
-            return StatusCode(StatusCodes.Status202Accepted);
+            RolesAndPermissionsManager.DeleteRole(roleId);
+            return Ok();
         }
-
-
         /// <summary>
-        ///     Assigns Role to User
+        /// Assigns role to user
         /// </summary>
-        /// <remarks>
-        ///     Please Make sure to spell the rolename and userId correctly
-        /// </remarks>
-        /// <param name="roleName">Role Name</param>
-        /// <param name="userId">User's Id</param>
-        /// <response code="500">RoleName or UserId is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200"></response>
         [ProducesResponseType(200, Type = null)]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpGet("AssignRoleToUser")]
+        [HttpPost("Roles/User")]
         public IActionResult AssignRoleToUser(string roleName, int userId)
         {
-            _rolesAndPermissionsManager.AssignRoleToUser(roleName, userId);
-            return StatusCode(StatusCodes.Status200OK);
+            RolesAndPermissionsManager.AssignRoleToUser(roleName, userId);
+            return Ok();
         }
-
         /// <summary>
-        ///     removes Role from User
+        /// Unassigns role of user
         /// </summary>
-        /// <remarks>
-        ///     Please Make sure to spell the rolename and userId correctly
-        /// </remarks>
-        /// <param name="roleName">Role Name</param>
-        /// <param name="userId">User's Id</param>
-        /// <response code="500">RoleName or UserId is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200"></response>
         [ProducesResponseType(200, Type = null)]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpDelete("RemoveRoleFromUser")]
+        [HttpDelete("Roles/User")]
         public IActionResult RemoveRoleFromUser(string roleName, int userId)
         {
-            _rolesAndPermissionsManager.RemoveRoleFromUser(roleName, userId);
-            return StatusCode(StatusCodes.Status200OK);
+            RolesAndPermissionsManager.RemoveRoleFromUser(roleName, userId);
+            return Ok();
         }
-
         /// <summary>
-        ///     Grants access to an action to a certain role
+        /// Grants access to an action to a certain role
         /// </summary>
-        /// <remarks>
-        ///     Please Make sure to spell the Rolename and ActionName correctly
-        /// </remarks>
-        /// <param name="roleName">Role Name</param>
-        /// <param name="actionName">Action Name</param>
-        /// <response code="500">Role or Action name is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200"></response>
         [ProducesResponseType(200, Type = null)]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpGet("RegisterRoleToAction")]
+        [HttpPost("Roles/Action")]
         public IActionResult RegisterRoleToAction(string roleName, string actionName)
         {
-            _rolesAndPermissionsManager.RegisterRoleToAction(actionName, roleName);
-            return StatusCode(StatusCodes.Status200OK);
+            RolesAndPermissionsManager.RegisterRoleToAction(actionName, roleName);
+            return Ok();
         }
-
         /// <summary>
-        ///     Removes access to an action to a certain role
+        /// Removes role from an action
         /// </summary>
-        /// <remarks>
-        ///     Please Make sure to spell the Rolename and ActionName correctly
-        /// </remarks>
-        /// <param name="roleName">Role Name</param>
-        /// <param name="actionName">Action Name</param>
-        /// <response code="500">Role or Action name is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200"></response>
         [ProducesResponseType(200, Type = null)]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpDelete("RemoveRoleFromAction")]
+        [HttpDelete("Roles/Action")]
         public IActionResult RemoveRoleFromAction(string roleName, string actionName)
         {
-            _rolesAndPermissionsManager.RemoveRoleFromAction(actionName, roleName);
-            return StatusCode(StatusCodes.Status200OK);
+            RolesAndPermissionsManager.RemoveRoleFromAction(actionName, roleName);
+            return Ok();
         }
-
         /// <summary>
-        ///     Get All Available Permissions
+        /// Get all permissions
         /// </summary>
-        /// <response code="200"> Available Permissions</response>
-        /// <response code="403">UnAuthorized Access </response>
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Permission>))]
-        [ProducesResponseType(403, Type = null)]
-        [HttpGet("GetAllPermissions")]
+        [ProducesResponseType(200, Type = typeof(IEnumerable<PermissionDTO>))]
+        [HttpGet("Permissions")]
         public IActionResult GetAllPermissions()
         {
-            return StatusCode(StatusCodes.Status201Created, _rolesAndPermissionsManager.GetAllPermissions().ToList());
+            return Ok(RolesAndPermissionsManager.GetAllPermissions());
         }
-
         /// <summary>
-        ///     Gets the Permission By Id
+        /// Gets the permission by it's name or id
         /// </summary>
         /// <remarks>
-        ///     Id must be greater than 0
+        /// <b>Only provide one of these parameters</b>
         /// </remarks>
-        /// <param name="permissionId">Permission Id</param>
-        /// <response code="500">Permission Id is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200">Permission</response>
-        [ProducesResponseType(200, Type = typeof(Permission))]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpGet("GetPermissionById")]
-        public IActionResult GetPermissionById(int permissionId)
+        /// <response code="400">
+        /// One of the following happened:
+        ///   - You entered an invalid id, or an invalid permission name
+        ///   - You entered both an id and a permission name
+        ///   - You didn't enter any data
+        /// </response>
+        [ProducesResponseType(200, Type = typeof(PermissionDTO))]
+        [ProducesResponseType(400, Type = null)]
+        [HttpGet("Permissions/Get")]
+        public IActionResult GetPermission(int? permissionId, string permissionName)
         {
-            if (permissionId <= 0) return BadRequest();
-            return StatusCode(StatusCodes.Status200OK, _rolesAndPermissionsManager.GetPermissionById(permissionId));
+            if (permissionId != null && !string.IsNullOrEmpty(permissionName)) return BadRequest();
+            PermissionDTO res;
+            if (permissionId != null) res = RolesAndPermissionsManager.GetPermissionById((int)permissionId);
+            else if (!string.IsNullOrEmpty(permissionName)) res = RolesAndPermissionsManager.GetPermissionByName(permissionName);
+            else return BadRequest();
+            if (res == null) return BadRequest();
+            else return Ok(res);
         }
-
         /// <summary>
-        ///     Gets the Permission By Name
+        /// Insert a permission
         /// </summary>
-        /// <param name="permissionName">Permission Name</param>
-        /// <response code="500">Permission Name is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200">Permission</response>
-        [ProducesResponseType(200, Type = typeof(Permission))]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpGet("GetPermissionByName")]
-        public IActionResult GetPermissionByName(string permissionName)
+        [ProducesResponseType(200, Type = typeof(int))]
+        [HttpPost("Permissions")]
+        public IActionResult InsertPermission(string permissionName)
         {
-            if (string.IsNullOrEmpty(permissionName)) return BadRequest();
-            return StatusCode(StatusCodes.Status200OK, _rolesAndPermissionsManager.GetPermissionByName(permissionName));
+            if (permissionName == null) return BadRequest();
+            return Ok(RolesAndPermissionsManager.InsertPermission(permissionName));
         }
-
         /// <summary>
-        ///     Insert a new permission in the DB
+        /// Deletes a permission
         /// </summary>
-        /// <param name="permission">permission to be Inserted</param>
-        /// <response code="500">permission's data is not correct or Already Exists</response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="201">permission Created</response>
-        [ProducesResponseType(201, Type = typeof(Permission))]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpPost("InsertPermission")]
-        public IActionResult InsertPermission([FromBody] PermissionDTO permission)
-        {
-            if (permission == null) return BadRequest();
-            return StatusCode(StatusCodes.Status201Created, _rolesAndPermissionsManager.InsertPermission(permission));
-        }
-
-        /// <summary>
-        ///     removes a Permission from the DB
-        /// </summary>
-        /// <param name="permissionId">permission's Id to be deleted</param>
-        /// <response code="500"></response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="202">Permission Deleted</response>
-        [ProducesResponseType(202, Type = null)]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpDelete("DeletePermission")]
+        [ProducesResponseType(200, Type = null)]
+        [HttpDelete("Permissions")]
         public IActionResult DeletePermission(int permissionId)
         {
-            if (permissionId <= 0) return BadRequest();
-            _rolesAndPermissionsManager.DeletePermission(permissionId);
-            return StatusCode(StatusCodes.Status202Accepted);
+            RolesAndPermissionsManager.DeletePermission(permissionId);
+            return Ok();
         }
-
         /// <summary>
-        ///     Gets the Permissions Of Role
+        /// Gets the permissions of a role
         /// </summary>
-        /// <remarks>
-        ///     Please Make sure to spell the rolename correctly
-        /// </remarks>
-        /// <param name="roleName">Role Name</param>
-        /// <response code="500">Role name is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200">Role's Permission</response>
+        /// <response code="400">Role doesn't exist</response>
         [ProducesResponseType(200, Type = typeof(IEnumerable<Permission>))]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpGet("GetPermissionsOfRole")]
+        [ProducesResponseType(400, Type = null)]
+        [HttpGet("Permissions/Role")]
         public IActionResult GetPermissionsOfRole(string roleName)
         {
-            return StatusCode(StatusCodes.Status200OK,
-                _rolesAndPermissionsManager.GetPermissionsOfRole(roleName).ToList());
+            var res = RolesAndPermissionsManager.GetPermissionsOfRole(roleName);
+            if (res == null) BadRequest();
+            return Ok(res);
         }
-
         /// <summary>
-        ///     Assigns permission to Role
+        /// Assigns permission to Role
         /// </summary>
-        /// <remarks>
-        ///     Please Make sure to spell the rolename and permission correctly
-        /// </remarks>
-        /// <param name="roleName">Role Name</param>
-        /// <param name="permissionName">Permission Name</param>
-        /// <response code="500">Role or Permission name is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200"></response>
         [ProducesResponseType(200, Type = null)]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpGet("AssignPermissionToRole")]
+        [HttpPost("Permissions/Role")]
         public IActionResult AssignPermissionToRole(string roleName, string permissionName)
         {
-            _rolesAndPermissionsManager.AssignPermissionToRole(roleName, permissionName);
-            return StatusCode(StatusCodes.Status200OK);
+            RolesAndPermissionsManager.AssignPermissionToRole(roleName, permissionName);
+            return Ok();
         }
-
         /// <summary>
-        ///     Removes permission to Role
+        /// Removes permission to Role
         /// </summary>
-        /// <remarks>
-        ///     Please Make sure to spell the rolename and permission correctly
-        /// </remarks>
-        /// <param name="roleName">Role Name</param>
-        /// <param name="permissionName">Permission Name</param>
-        /// <response code="500">Role or Permission name is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200"></response>
         [ProducesResponseType(200, Type = null)]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpDelete("RemovePermissionFromRole")]
+        [HttpDelete("Permissions/Role")]
         public IActionResult RemovePermissionFromRole(string roleName, string permissionName)
         {
-            _rolesAndPermissionsManager.RemovePermissionFromRole(roleName, permissionName);
-            return StatusCode(StatusCodes.Status200OK);
+            RolesAndPermissionsManager.RemovePermissionFromRole(roleName, permissionName);
+            return Ok();
         }
-
         /// <summary>
-        ///     Grants access to an action to a certain permission
+        /// Grants access to an action to a certain permission
         /// </summary>
-        /// <remarks>
-        ///     Please Make sure to spell the permissionName and ActionName correctly
-        /// </remarks>
-        /// <param name="permissionName">Permission Name</param>
-        /// <param name="actionName">Action Name</param>
-        /// <response code="500">Permission or Action name is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200"></response>
         [ProducesResponseType(200, Type = null)]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpGet("RegisterPermissionToAction")]
+        [HttpPost("Permissions/Action")]
         public IActionResult RegisterPermissionToAction(string permissionName, string actionName)
         {
-            _rolesAndPermissionsManager.RegisterPermissionToAction(actionName, permissionName);
-            return StatusCode(StatusCodes.Status200OK);
+            RolesAndPermissionsManager.RegisterPermissionToAction(actionName, permissionName);
+            return Ok();
         }
-
         /// <summary>
-        ///     Removes access to an action to a certain permission
+        /// Removes access to an action to a certain permission
         /// </summary>
-        /// <remarks>
-        ///     Please Make sure to spell the permissionName and ActionName correctly
-        /// </remarks>
-        /// <param name="permissionName">Permission Name</param>
-        /// <param name="actionName">Action Name</param>
-        /// <response code="500">Permission or Action name is not correct </response>
-        /// <response code="403">UnAuthorized Access </response>
-        /// <response code="200"></response>
         [ProducesResponseType(200, Type = null)]
-        [ProducesResponseType(403, Type = null)]
-        [ProducesResponseType(500, Type = null)]
-        [HttpDelete("RemovePermissionFromAction")]
+        [HttpDelete("Permissions/Action")]
         public IActionResult RemovePermissionFromAction(string permissionName, string actionName)
         {
-            _rolesAndPermissionsManager.RemovePermissionFromAction(actionName, permissionName);
-            return StatusCode(StatusCodes.Status200OK);
+            RolesAndPermissionsManager.RemovePermissionFromAction(actionName, permissionName);
+            return Ok();
         }
-
     }
 }
