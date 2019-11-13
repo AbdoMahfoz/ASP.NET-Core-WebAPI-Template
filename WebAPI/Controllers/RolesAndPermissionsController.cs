@@ -7,7 +7,7 @@ using Services.DTOs;
 namespace WebAPI.Controllers
 {
     [Produces("application/json")]
-    [Route("api/[controller]")]
+    [Route("api")]
     [ApiController]
     public class RolesAndPermissionsController : ControllerBase
     {
