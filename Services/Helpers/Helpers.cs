@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using Services.DTOs;
+using Models.DataModels;
 
 namespace Services
 {
@@ -42,17 +43,25 @@ namespace Services
             Dictionary<string, PropertyInfo> OutProps = new Dictionary<string, PropertyInfo>();
             foreach (var property in typeof(T).GetProperties())
             {
-                if (property.CanRead)
+                bool Ignore = (from attrib in property.CustomAttributes
+                               where attrib.AttributeType == typeof(IgnoreInHelpers)
+                               select attrib).Any();
+                if (!Ignore && property.CanWrite)
                 {
                     OutProps.Add(property.Name, property);
                 }
             }
             foreach (var InProp in obj.GetType().GetProperties())
             {
-                PropertyInfo OutProp;
-                if (InProp.CanRead && OutProps.TryGetValue(InProp.Name, out OutProp))
+                bool Ignore = (from attrib in InProp.CustomAttributes
+                               where attrib.AttributeType == typeof(IgnoreInHelpers)
+                               select attrib).Any();
+                if (!Ignore && InProp.CanRead && OutProps.TryGetValue(InProp.Name, out PropertyInfo OutProp))
                 {
-                    OutProp.SetValue(res, InProp.GetValue(obj));
+                    if (OutProp.PropertyType == InProp.PropertyType)
+                    {
+                        OutProp.SetValue(res, InProp.GetValue(obj));
+                    }
                 }
             }
             return res;

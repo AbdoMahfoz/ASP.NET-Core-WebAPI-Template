@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Models.DataModels
 {
+    public class IgnoreInHelpers : Attribute { }
     public class BaseModel
     {
         [Key]
