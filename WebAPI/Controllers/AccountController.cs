@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using BusinessLogic.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -41,10 +42,17 @@ namespace WebAPI.Controllers
         [HttpPost("Token")]
         public IActionResult Login([FromBody]UserAuthenticationRequest request)
         {
-            User user = Auth.Authenticate(request);
-            if (user == null)
+            try
+            {
+                User user = Auth.Authenticate(request);
+                if (user == null)
+                    return NotFound();
+                return StatusCode(StatusCodes.Status202Accepted, new UserAuthenticationResult(user.Id, user.Token, options.Value.TokenExpirationMinutes));
+            }
+            catch(KeyNotFoundException)
+            {
                 return NotFound();
-            return StatusCode(StatusCodes.Status202Accepted, new UserAuthenticationResult(user.Id, user.Token, options.Value.TokenExpirationMinutes));
+            }
         }
         /// <summary>
         /// Creates a new token with the same credientials of the exisiting one

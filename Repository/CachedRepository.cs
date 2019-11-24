@@ -1,15 +1,29 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Models;
 using Models.DataModels;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace Repository
 {
     public class CachedRepository<T> : Repository<T>, ICachedRepository<T> where T : BaseModel
     {
-        public CachedRepository(ApplicationDbContext db, ILogger<CachedRepository<T>> logger) : base(db, logger) { }
+        static private ApplicationDbContext _db = null;
+        static private ApplicationDbContext db 
+        {
+            get
+            {
+                if(_db == null)
+                {
+                    _db = new ApplicationDbContext();
+                }
+                return _db;
+            }
+        }
+        public CachedRepository(ILogger<CachedRepository<T>> logger) : base(db, logger) { }
         private static Dictionary<int, T> cache;
         private readonly static object cacheLock = new object();
         private Dictionary<int, T> Cache

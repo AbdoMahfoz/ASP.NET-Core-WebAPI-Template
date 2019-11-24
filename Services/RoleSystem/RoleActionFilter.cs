@@ -16,8 +16,9 @@ namespace Services.RoleSystem
         }
         public void OnActionExecuting(ActionExecutingContext context)
         {
-            string[] Roles = ActionManager.GetRolesOfAction(context.ActionDescriptor.DisplayName).ToArray();
-            string[] Permissions = ActionManager.GetPermissionOfAction(context.ActionDescriptor.DisplayName).ToArray();
+            string path = context.HttpContext.Request.Path;
+            string[] Roles = ActionManager.GetRolesOfAction(path).ToArray();
+            string[] Permissions = ActionManager.GetPermissionOfAction(path).ToArray();
             if (!context.HttpContext.User.Claims.Any())
             {
                 if (Roles.Length > 0 || Permissions.Length > 0)

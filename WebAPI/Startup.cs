@@ -132,6 +132,7 @@ namespace WebAPI
             services.AddScoped<IActionRoleManager, ActionRoleManager>();
 
             services.AddTransient<IAuth, JwtAuthorization>();
+            services.AddTransient<IAccountLogic, AccountLogic>();
             services.AddTransient<IValidator<UserAuthenticationRequest>, UserAuthenticationRequestValidator>();
             services.AddTransient<IMailService, SMTPMailService>();
             services.AddTransient<IRolesAndPermissionsManager, RolesAndPermissionsManager>();

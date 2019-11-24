@@ -16,8 +16,7 @@ namespace Repository.ExtendedRepositories
     public class ActionPermissionRepository : CachedRepository<ActionPermission>, IActionPermissionRepository
     {
         private readonly IPermissionsRepository PermissionsRepository;
-        public ActionPermissionRepository(ApplicationDbContext db, ILogger<ActionPermissionRepository> logger,
-            IPermissionsRepository PermissionsRepository) : base(db, logger)
+        public ActionPermissionRepository(ILogger<ActionPermissionRepository> logger, IPermissionsRepository PermissionsRepository) : base(logger)
         {
             this.PermissionsRepository = PermissionsRepository;
         }

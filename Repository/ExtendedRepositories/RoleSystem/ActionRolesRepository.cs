@@ -18,9 +18,7 @@ namespace Repository.ExtendedRepositories
     {
         private readonly IRolesRepository RolesRepository;
 
-        public ActionRolesRepository(ApplicationDbContext db, ILogger<ActionRolesRepository> logger,
-            IRolesRepository RolesRepository)
-            : base(db, logger)
+        public ActionRolesRepository(ILogger<ActionRolesRepository> logger, IRolesRepository RolesRepository) : base(logger)
         {
             this.RolesRepository = RolesRepository;
         }
