@@ -132,5 +132,15 @@ namespace BusinessLogic.Implementations
         {
             _permissionsRepo.RemovePermissionFromRole(permissionName, roleName);
         }
+
+        public IEnumerable<string> GetRolesOfAction(string actionName)
+        {
+            return _actionRoleManagerRepo.GetRolesOfAction(actionName);
+        }
+
+        public IEnumerable<string> GetPermissionsOfAction(string actionName)
+        {
+            return _actionRoleManagerRepo.GetPermissionOfAction(actionName);
+        }
     }
 }

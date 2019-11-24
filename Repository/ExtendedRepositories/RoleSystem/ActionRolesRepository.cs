@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Models;
@@ -6,6 +7,7 @@ using Models.DataModels;
 
 namespace Repository.ExtendedRepositories
 {
+    public class RoleAlreadyAssignedException : Exception { }
     public interface IActionRolesRepository : ICachedRepository<ActionRole>
     {
         Task AssignRoleToAction(string ActionName, string RoleName);
@@ -30,6 +32,10 @@ namespace Repository.ExtendedRepositories
 
         public Task AssignRoleToAction(string ActionName, int RoleId)
         {
+            bool roleExists = (from role in GetAll()
+                               where role.ActionName == ActionName && role.Id == RoleId
+                               select role).Any();
+            if (roleExists) throw new RoleAlreadyAssignedException();
             return Insert(new ActionRole
             {
                 ActionName = ActionName,

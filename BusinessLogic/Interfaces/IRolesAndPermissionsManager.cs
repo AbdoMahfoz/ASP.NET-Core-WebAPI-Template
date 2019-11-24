@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Services.DTOs;
 
 namespace BusinessLogic.Interfaces
@@ -12,6 +13,7 @@ namespace BusinessLogic.Interfaces
         void DeleteRole(int id);
         void RegisterRoleToAction(string actionName, string roleName);
         void RemoveRoleFromAction(string actionName, string roleName);
+        IEnumerable<string> GetRolesOfAction(string actionName);
 
         void AssignRoleToUser(string roleName, int userId);
         void RemoveRoleFromUser(string roleName, int userId);
@@ -23,6 +25,7 @@ namespace BusinessLogic.Interfaces
         void DeletePermission(int id);
         void RegisterPermissionToAction(string actionName, string permissionName);
         void RemovePermissionFromAction(string actionName, string permissionName);
+        IEnumerable<string> GetPermissionsOfAction(string actionName);
 
         IQueryable<PermissionDTO> GetPermissionsOfRole(string roleName);
 

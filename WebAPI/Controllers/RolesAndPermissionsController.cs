@@ -2,6 +2,7 @@
 using BusinessLogic.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Models.DataModels;
+using Repository.ExtendedRepositories;
 using Services.DTOs;
 
 namespace WebAPI.Controllers
@@ -99,14 +100,41 @@ namespace WebAPI.Controllers
             return Ok();
         }
         /// <summary>
-        /// Grants access to an action to a certain role
+        /// Assigns an action to a role
         /// </summary>
+        /// <response code="400">Role already regisered to this action</response>
         [ProducesResponseType(200, Type = null)]
+        [ProducesResponseType(400, Type = null)]
         [HttpPost("Roles/Action")]
         public IActionResult RegisterRoleToAction(string roleName, string actionName)
         {
-            RolesAndPermissionsManager.RegisterRoleToAction(actionName, roleName);
-            return Ok();
+            try
+            {
+                RolesAndPermissionsManager.RegisterRoleToAction(actionName, roleName);
+                return Ok();
+            }
+            catch(RoleAlreadyAssignedException)
+            {
+                return BadRequest();
+            }
+        }
+        /// <summary>
+        /// Gets the roles assigned to an action
+        /// </summary>
+        [ProducesResponseType(200, Type = typeof(IEnumerable<string>))]
+        [HttpGet("Roles/Action")]
+        public IActionResult GetRolesOfAction(string actionName)
+        {
+            return Ok(RolesAndPermissionsManager.GetRolesOfAction(actionName));
+        }
+        /// <summary>
+        /// Gets the permissions assigned to an action
+        /// </summary>
+        [ProducesResponseType(200, Type = typeof(IEnumerable<string>))]
+        [HttpGet("Permissions/Action")]
+        public IActionResult GetPermissionsOfAction(string actionName)
+        {
+            return Ok(RolesAndPermissionsManager.GetPermissionsOfAction(actionName));
         }
         /// <summary>
         /// Removes role from an action
