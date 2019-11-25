@@ -8,6 +8,7 @@ namespace Repository.ExtendedRepositories
     public interface IPermissionsRepository : IRepository<Permission>
     {
         Permission GetPermission(string Name);
+        bool CheckPermissionExists(string Name);
 
         IQueryable<Permission> GetPermissionsOfRole(string Role);
         IQueryable<Permission> GetPermissionsOfRole(int RoleId);
@@ -130,6 +131,13 @@ namespace Repository.ExtendedRepositories
                     on roleUser.RoleId equals permissionRole.RoleId
                     where roleUser.UserId == UserId && permissionRole.PermissionId == PermissionId
                     select permissionRole).Any();
+        }
+
+        public bool CheckPermissionExists(string Name)
+        {
+            return (from permission in GetAll()
+                    where permission.Name == Name
+                    select permission).Any();
         }
     }
 }

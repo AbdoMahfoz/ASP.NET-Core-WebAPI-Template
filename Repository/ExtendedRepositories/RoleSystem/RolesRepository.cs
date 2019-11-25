@@ -8,6 +8,7 @@ namespace Repository.ExtendedRepositories
     public interface IRolesRepository : IRepository<Role>
     {
         Role GetRole(string Name);
+        bool CheckRoleExists(string Name);
         IQueryable<Role> GetRolesOfUser(int UserId);
         IQueryable<Role> GetRolesOfUser(string Username);
         void AssignRoleToUser(string Role, string Username);
@@ -77,6 +78,12 @@ namespace Repository.ExtendedRepositories
             return (from userRole in _userRoleRepository.GetAll()
                     where userRole.UserId == UserId && userRole.Role.Name == Role
                     select userRole).Any();
+        }
+        public bool CheckRoleExists(string Name)
+        {
+            return (from role in GetAll()
+                    where role.Name == Name
+                    select role).Any();
         }
     }
 }

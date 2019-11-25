@@ -32,9 +32,7 @@ namespace Repository
         public virtual T Get(int id)
         {
             var result = GetAll().Where(e => e.Id == id).FirstOrDefault();
-            return result != null && result.Id > 0
-                ? result
-                : throw new KeyNotFoundException($"{nameof(id)} {id} Doesn't exist in {nameof(T)} Table");
+            return result;
         }
 
         public virtual async Task Insert(T entity)

@@ -12,137 +12,142 @@ namespace BusinessLogic.Implementations
 {
     public class RolesAndPermissionsManager : IRolesAndPermissionsManager
     {
-        private readonly IActionRoleManager _actionRoleManagerRepo;
-        private readonly IPermissionsRepository _permissionsRepo;
-        private readonly IRolesRepository _rolesRepo;
+        private readonly IActionRoleManager ActionRoleManager;
+        private readonly IPermissionsRepository PermissionsRepository;
+        private readonly IRolesRepository RolesRepository;
 
-        public RolesAndPermissionsManager(IPermissionsRepository permissionsRepo, IRolesRepository rolesRepo,
-            IActionRoleManager actionRoleManagerRepo)
+        public RolesAndPermissionsManager(IPermissionsRepository PermissionsRepository, IRolesRepository RolesRepository,
+            IActionRoleManager ActionRoleManager)
         {
-            _permissionsRepo = permissionsRepo;
-            _rolesRepo = rolesRepo;
-            _actionRoleManagerRepo = actionRoleManagerRepo;
+            this.PermissionsRepository = PermissionsRepository;
+            this.RolesRepository = RolesRepository;
+            this.ActionRoleManager = ActionRoleManager;
         }
 
         public IQueryable<RoleDTO> GetAllRoles()
         {
-            return _rolesRepo.GetAll().Select(u => Helpers.MapTo<RoleDTO>(u));
+            return RolesRepository.GetAll().Select(u => Helpers.MapTo<RoleDTO>(u));
         }
 
         public RoleDTO GetRoleById(int roleId)
         {
-            return Helpers.MapTo<RoleDTO>(_rolesRepo.Get(roleId));
+            return Helpers.MapTo<RoleDTO>(RolesRepository.Get(roleId));
         }
 
         public RoleDTO GetRoleByName(string roleName)
         {
-            return Helpers.MapTo<RoleDTO>(_rolesRepo.GetRole(roleName));
+            return Helpers.MapTo<RoleDTO>(RolesRepository.GetRole(roleName));
         }
 
         public int InsertRole(string newRole)
         {
-            if (Helpers.HasNullOrEmptyStrings(newRole))
-                throw new Exception("The New Role To be added Contains null values");
-            if (_rolesRepo.GetAll().Where(u => u.Name == newRole).Any())
+            if (string.IsNullOrWhiteSpace(newRole))
+                return -1;
+            if (RolesRepository.CheckRoleExists(newRole))
                 return -1;
             var role = new Role { Name = newRole };
-            _rolesRepo.Insert(role).Wait();
+            RolesRepository.Insert(role).Wait();
             return role.Id;
         }
 
-        public void DeleteRole(int id)
+        public bool DeleteRole(int id)
         {
-            if (id <= 0) throw new KeyNotFoundException($"id {id} doesn't exist in the Database");
-            var role = _rolesRepo.Get(id);
-            _rolesRepo.SoftDelete(role);
+            var role = RolesRepository.Get(id);
+            if (role == null) return false;
+            RolesRepository.SoftDelete(role);
+            return true;
         }
 
         public void RegisterRoleToAction(string actionName, string roleName)
         {
-            _actionRoleManagerRepo.RegisterRoleToAction(actionName, roleName);
+            ActionRoleManager.RegisterRoleToAction(actionName, roleName);
         }
 
         public void RemoveRoleFromAction(string actionName, string roleName)
         {
-            _actionRoleManagerRepo.RemoveRoleFromAction(actionName, roleName);
+            ActionRoleManager.RemoveRoleFromAction(actionName, roleName);
         }
 
         public void AssignRoleToUser(string roleName, int userId)
         {
-            _rolesRepo.AssignRoleToUser(roleName, userId);
+            RolesRepository.AssignRoleToUser(roleName, userId);
         }
 
         public void RemoveRoleFromUser(string roleName, int userId)
         {
-            _rolesRepo.RemoveRoleFormUser(roleName, userId);
+            RolesRepository.RemoveRoleFormUser(roleName, userId);
         }
 
         public IQueryable<PermissionDTO> GetAllPermissions()
         {
-            return _permissionsRepo.GetAll().Select(x => Helpers.MapTo<PermissionDTO>(x));
+            return PermissionsRepository.GetAll().Select(x => Helpers.MapTo<PermissionDTO>(x));
         }
 
         public PermissionDTO GetPermissionById(int permissionId)
         {
-            return Helpers.MapTo<PermissionDTO>(_permissionsRepo.Get(permissionId));
+            return Helpers.MapTo<PermissionDTO>(PermissionsRepository.Get(permissionId));
         }
 
         public PermissionDTO GetPermissionByName(string permissionName)
         {
-            return Helpers.MapTo<PermissionDTO>(_permissionsRepo.GetPermission(permissionName));
+            return Helpers.MapTo<PermissionDTO>(PermissionsRepository.GetPermission(permissionName));
         }
 
         public int InsertPermission(string newPermission)
         {
-            if (Helpers.HasNullOrEmptyStrings(newPermission))
-                throw new Exception("The New Permission To be added Contains null values");
+            if (string.IsNullOrWhiteSpace(newPermission))
+                return -1;
+            if (PermissionsRepository.CheckPermissionExists(newPermission))
+                return -1;
             var permission = new Permission { Name = newPermission };
-            _permissionsRepo.Insert(permission).Wait();
+            PermissionsRepository.Insert(permission).Wait();
             return permission.Id;
         }
 
-        public void DeletePermission(int id)
+        public bool DeletePermission(int id)
         {
-            if (id <= 0) throw new KeyNotFoundException($"id {id} doesn't exist in the Database");
-            var permission = _permissionsRepo.Get(id);
-            _permissionsRepo.SoftDelete(permission);
+            var permission = PermissionsRepository.Get(id);
+            if (permission == null)
+                return false;
+            PermissionsRepository.SoftDelete(permission);
+            return true;
         }
 
         public void RegisterPermissionToAction(string actionName, string permissionName)
         {
-            _actionRoleManagerRepo.RegisterPermissionToAction(actionName, permissionName);
+            ActionRoleManager.RegisterPermissionToAction(actionName, permissionName);
         }
 
         public void RemovePermissionFromAction(string ActionName, string permissionName)
         {
-            _actionRoleManagerRepo.RemovePermissionFromAction(ActionName, permissionName);
+            ActionRoleManager.RemovePermissionFromAction(ActionName, permissionName);
         }
 
         public IQueryable<PermissionDTO> GetPermissionsOfRole(string roleName)
         {
-            return _permissionsRepo.GetPermissionsOfRole(roleName).Select(x => Helpers.MapTo<PermissionDTO>(x));
+            return PermissionsRepository.GetPermissionsOfRole(roleName).Select(x => Helpers.MapTo<PermissionDTO>(x));
         }
 
         public void AssignPermissionToRole(string roleName, string permissionName)
         {
-            _permissionsRepo.AssignPermissionToRole(permissionName, roleName);
+            PermissionsRepository.AssignPermissionToRole(permissionName, roleName);
         }
 
         public void RemovePermissionFromRole(string roleName, string permissionName)
         {
-            _permissionsRepo.RemovePermissionFromRole(permissionName, roleName);
+            PermissionsRepository.RemovePermissionFromRole(permissionName, roleName);
         }
 
         public IEnumerable<string> GetRolesOfAction(string actionName)
         {
-            return _actionRoleManagerRepo.GetRolesOfAction(actionName);
+            return ActionRoleManager.GetRolesOfAction(actionName);
         }
 
         public IEnumerable<string> GetPermissionsOfAction(string actionName)
         {
-            return _actionRoleManagerRepo.GetPermissionOfAction(actionName)
-                                         .Concat(_actionRoleManagerRepo.GetDerivedPermissionOfAction(actionName))
-                                         .Distinct();
+            return ActionRoleManager.GetPermissionOfAction(actionName)
+                                    .Concat(ActionRoleManager.GetDerivedPermissionOfAction(actionName))
+                                    .Distinct();
         }
     }
 }

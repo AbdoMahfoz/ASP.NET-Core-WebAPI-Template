@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Services.DTOs;
 
 namespace BusinessLogic.Interfaces
@@ -10,7 +11,7 @@ namespace BusinessLogic.Interfaces
         RoleDTO GetRoleById(int roleId);
         RoleDTO GetRoleByName(string roleName);
         int InsertRole(string newRole);
-        void DeleteRole(int id);
+        bool DeleteRole(int id);
         void RegisterRoleToAction(string actionName, string roleName);
         void RemoveRoleFromAction(string actionName, string roleName);
         IEnumerable<string> GetRolesOfAction(string actionName);
@@ -22,7 +23,7 @@ namespace BusinessLogic.Interfaces
         PermissionDTO GetPermissionById(int permissionId);
         PermissionDTO GetPermissionByName(string permissionName);
         int InsertPermission(string newPermission);
-        void DeletePermission(int id);
+        bool DeletePermission(int id);
         void RegisterPermissionToAction(string actionName, string permissionName);
         void RemovePermissionFromAction(string actionName, string permissionName);
         IEnumerable<string> GetPermissionsOfAction(string actionName);
