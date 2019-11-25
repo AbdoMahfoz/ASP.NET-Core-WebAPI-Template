@@ -14,6 +14,7 @@ namespace Repository.ExtendedRepositories
         Task AssignPermissionToAction(string ActionName, int PermissionId);
         void RemovePermissionFromAction(string ActionName, string PermissionName);
         IQueryable<Permission> GetPermissionsOfAction(string ActionName);
+        IQueryable<Permission> GetDerivedPermissionOfAction(string ActionName);
     }
     public class ActionPermissionRepository : CachedRepository<ActionPermission>, IActionPermissionRepository
     {
@@ -49,13 +50,15 @@ namespace Repository.ExtendedRepositories
         }
         public IQueryable<Permission> GetPermissionsOfAction(string ActionName)
         {
-            return (from actionPermission in GetAll()
-                    where actionPermission.ActionName == ActionName
-                    select actionPermission.Permission)
-                   .Concat(ActionRoles.GetAll().Where(u => u.ActionName == ActionName)
-                                               .SelectMany(u => u.Role.RolePermissions)
-                                               .Select(u => u.Permission));
-
+            return from actionPermission in GetAll()
+                   where actionPermission.ActionName == ActionName
+                   select actionPermission.Permission;
+        }
+        public IQueryable<Permission> GetDerivedPermissionOfAction(string ActionName)
+        {
+            return ActionRoles.GetAll().Where(u => u.ActionName == ActionName)
+                                       .SelectMany(u => u.Role.RolePermissions)
+                                       .Select(u => u.Permission);
         }
     }
 }

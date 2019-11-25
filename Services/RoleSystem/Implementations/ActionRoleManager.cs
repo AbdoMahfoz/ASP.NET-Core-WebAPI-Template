@@ -46,5 +46,9 @@ namespace Services.RoleSystem.Implementations
         {
             ActionRolesRepository.AssignRoleToAction(ActionName, RoleName);
         }
+        public IEnumerable<string> GetDerivedPermissionOfAction(string ActionName)
+        {
+            return ActionPermissionsRepository.GetDerivedPermissionOfAction(ActionName).Select(u => u.Name);
+        }
     }
 }

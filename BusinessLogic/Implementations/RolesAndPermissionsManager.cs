@@ -140,7 +140,9 @@ namespace BusinessLogic.Implementations
 
         public IEnumerable<string> GetPermissionsOfAction(string actionName)
         {
-            return _actionRoleManagerRepo.GetPermissionOfAction(actionName);
+            return _actionRoleManagerRepo.GetPermissionOfAction(actionName)
+                                         .Concat(_actionRoleManagerRepo.GetDerivedPermissionOfAction(actionName))
+                                         .Distinct();
         }
     }
 }
