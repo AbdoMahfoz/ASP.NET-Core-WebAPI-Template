@@ -39,6 +39,7 @@ namespace Services
         }
         public static T MapTo<T>(object obj) where T : new()
         {
+            if (obj == null) return default;
             T res = new T();
             Dictionary<string, PropertyInfo> OutProps = new Dictionary<string, PropertyInfo>();
             foreach (var property in typeof(T).GetProperties())

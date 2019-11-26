@@ -15,13 +15,15 @@ namespace BusinessLogic.Implementations
         private readonly IActionRoleManager ActionRoleManager;
         private readonly IPermissionsRepository PermissionsRepository;
         private readonly IRolesRepository RolesRepository;
+        private readonly IUserRepository UserRepository;
 
         public RolesAndPermissionsManager(IPermissionsRepository PermissionsRepository, IRolesRepository RolesRepository,
-            IActionRoleManager ActionRoleManager)
+            IActionRoleManager ActionRoleManager, IUserRepository UserRepository)
         {
             this.PermissionsRepository = PermissionsRepository;
             this.RolesRepository = RolesRepository;
             this.ActionRoleManager = ActionRoleManager;
+            this.UserRepository = UserRepository;
         }
 
         public IQueryable<RoleDTO> GetAllRoles()
@@ -63,19 +65,30 @@ namespace BusinessLogic.Implementations
             ActionRoleManager.RegisterRoleToAction(actionName, roleName);
         }
 
-        public void RemoveRoleFromAction(string actionName, string roleName)
+        public bool RemoveRoleFromAction(string actionName, string roleName)
         {
+            if (!ActionRoleManager.GetRolesOfAction(actionName).Contains(roleName))
+                return false;
             ActionRoleManager.RemoveRoleFromAction(actionName, roleName);
+            return true;
         }
 
-        public void AssignRoleToUser(string roleName, int userId)
+        public bool AssignRoleToUser(string roleName, int userId)
         {
+            if (!RolesRepository.CheckRoleExists(roleName) || !UserRepository.CheckUserExists(userId) ||
+                RolesRepository.UserHasRole(userId, roleName))
+                return false;
             RolesRepository.AssignRoleToUser(roleName, userId);
+            return true;
         }
 
-        public void RemoveRoleFromUser(string roleName, int userId)
+        public bool RemoveRoleFromUser(string roleName, int userId)
         {
+            if (!RolesRepository.CheckRoleExists(roleName) || !UserRepository.CheckUserExists(userId) || 
+                !RolesRepository.UserHasRole(userId, roleName))
+                return false;
             RolesRepository.RemoveRoleFormUser(roleName, userId);
+            return true;
         }
 
         public IQueryable<PermissionDTO> GetAllPermissions()
@@ -104,38 +117,54 @@ namespace BusinessLogic.Implementations
             return permission.Id;
         }
 
-        public bool DeletePermission(int id)
+        public bool DeletePermission(string permission)
         {
-            var permission = PermissionsRepository.Get(id);
-            if (permission == null)
+            if (string.IsNullOrWhiteSpace(permission))
                 return false;
-            PermissionsRepository.SoftDelete(permission);
+            var res = PermissionsRepository.GetPermission(permission);
+            if (res == null)
+                return false;
+            PermissionsRepository.SoftDelete(res);
             return true;
         }
 
-        public void RegisterPermissionToAction(string actionName, string permissionName)
+        public bool RegisterPermissionToAction(string actionName, string permissionName)
         {
+            if (!PermissionsRepository.CheckPermissionExists(permissionName))
+                return false;
             ActionRoleManager.RegisterPermissionToAction(actionName, permissionName);
+            return true;
         }
 
-        public void RemovePermissionFromAction(string ActionName, string permissionName)
+        public bool RemovePermissionFromAction(string ActionName, string permissionName)
         {
+            if (!PermissionsRepository.CheckPermissionExists(permissionName))
+                return false;
             ActionRoleManager.RemovePermissionFromAction(ActionName, permissionName);
+            return true;
         }
 
         public IQueryable<PermissionDTO> GetPermissionsOfRole(string roleName)
         {
+            if (!RolesRepository.CheckRoleExists(roleName))
+                return null;
             return PermissionsRepository.GetPermissionsOfRole(roleName).Select(x => Helpers.MapTo<PermissionDTO>(x));
         }
 
-        public void AssignPermissionToRole(string roleName, string permissionName)
+        public bool AssignPermissionToRole(string roleName, string permissionName)
         {
+            if (!RolesRepository.CheckRoleExists(roleName) || !PermissionsRepository.CheckPermissionExists(permissionName))
+                return false;
             PermissionsRepository.AssignPermissionToRole(permissionName, roleName);
+            return true;
         }
 
-        public void RemovePermissionFromRole(string roleName, string permissionName)
+        public bool RemovePermissionFromRole(string roleName, string permissionName)
         {
+            if (!RolesRepository.CheckRoleExists(roleName) || !PermissionsRepository.CheckPermissionExists(permissionName))
+                return false;
             PermissionsRepository.RemovePermissionFromRole(permissionName, roleName);
+            return true;
         }
 
         public IEnumerable<string> GetRolesOfAction(string actionName)

@@ -11,6 +11,7 @@ namespace Repository.ExtendedRepositories
     {
         User GetUser(string username);
         bool CheckUsernameExists(string username);
+        bool CheckUserExists(int UserId);
     }
     public class UserRepository : Repository<User>, IUserRepository
     {
@@ -25,6 +26,13 @@ namespace Repository.ExtendedRepositories
         {
             return (from user in GetAll()
                     where user.UserName == username
+                    select user).Any();
+        }
+
+        public bool CheckUserExists(int UserId)
+        {
+            return (from user in GetAll()
+                    where user.Id == UserId
                     select user).Any();
         }
     }

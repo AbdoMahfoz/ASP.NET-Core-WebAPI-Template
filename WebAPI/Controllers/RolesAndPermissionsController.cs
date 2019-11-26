@@ -72,37 +72,52 @@ namespace WebAPI.Controllers
         /// <summary>
         /// Deletes a role
         /// </summary>
+        /// <response code="200">Role deleted successfully</response>
+        /// <response code="400">Given Id doesn't exist</response>
         [ProducesResponseType(200, Type = null)]
+        [ProducesResponseType(400, Type = null)]
         [HttpDelete("Roles")]
         public IActionResult DeleteRole(int roleId)
         {
-            RolesAndPermissionsManager.DeleteRole(roleId);
-            return Ok();
+            if (RolesAndPermissionsManager.DeleteRole(roleId))
+                return Ok();
+            else
+                return BadRequest();
         }
         /// <summary>
         /// Assigns role to user
         /// </summary>
+        /// <response code="200">Role assigned successfully</response>
+        /// <response code="400">The given role or the given user id doesn't exist, or the given user already has the given role</response>
         [ProducesResponseType(200, Type = null)]
+        [ProducesResponseType(400, Type = null)]
         [HttpPost("Roles/User")]
         public IActionResult AssignRoleToUser(string roleName, int userId)
         {
-            RolesAndPermissionsManager.AssignRoleToUser(roleName, userId);
-            return Ok();
+            if (RolesAndPermissionsManager.AssignRoleToUser(roleName, userId))
+                return Ok();
+            else
+                return BadRequest();
         }
         /// <summary>
         /// Unassigns role of user
         /// </summary>
+        /// <response code="200">Role removed successfully</response>
+        /// <response code="400">The given role or the given user id doesn't exist, or the given user doesn't have the given role</response>
         [ProducesResponseType(200, Type = null)]
+        [ProducesResponseType(400, Type = null)]
         [HttpDelete("Roles/User")]
         public IActionResult RemoveRoleFromUser(string roleName, int userId)
         {
-            RolesAndPermissionsManager.RemoveRoleFromUser(roleName, userId);
-            return Ok();
+            if (RolesAndPermissionsManager.RemoveRoleFromUser(roleName, userId))
+                return Ok();
+            else
+                return BadRequest();
         }
         /// <summary>
         /// Assigns an action to a role
         /// </summary>
-        /// <response code="400">Role already regisered to this action</response>
+        /// <response code="400">Role already registered to this action</response>
         [ProducesResponseType(200, Type = null)]
         [ProducesResponseType(400, Type = null)]
         [HttpPost("Roles/Action")]
@@ -139,12 +154,16 @@ namespace WebAPI.Controllers
         /// <summary>
         /// Removes role from an action
         /// </summary>
+        /// <response code="400">The given action doesn't have the given role</response>
         [ProducesResponseType(200, Type = null)]
+        [ProducesResponseType(400, Type = null)]
         [HttpDelete("Roles/Action")]
         public IActionResult RemoveRoleFromAction(string roleName, string actionName)
         {
-            RolesAndPermissionsManager.RemoveRoleFromAction(actionName, roleName);
-            return Ok();
+            if (RolesAndPermissionsManager.RemoveRoleFromAction(actionName, roleName))
+                return Ok();
+            else
+                return BadRequest();
         }
         /// <summary>
         /// Get all permissions
@@ -183,22 +202,31 @@ namespace WebAPI.Controllers
         /// <summary>
         /// Insert a permission
         /// </summary>
+        /// <response code="400">Permission already exists</response>
         [ProducesResponseType(200, Type = typeof(int))]
+        [ProducesResponseType(400, Type = null)]
         [HttpPost("Permissions")]
         public IActionResult InsertPermission(string permissionName)
         {
             if (permissionName == null) return BadRequest();
-            return Ok(RolesAndPermissionsManager.InsertPermission(permissionName));
+            int Id = RolesAndPermissionsManager.InsertPermission(permissionName);
+            if (Id == -1)
+                return BadRequest();
+            return Ok(Id);
         }
         /// <summary>
         /// Deletes a permission
         /// </summary>
+        /// <response code="400">The given permission Id doesn't exist</response>
         [ProducesResponseType(200, Type = null)]
+        [ProducesResponseType(400, Type = null)]
         [HttpDelete("Permissions")]
-        public IActionResult DeletePermission(int permissionId)
+        public IActionResult DeletePermission(string permission)
         {
-            RolesAndPermissionsManager.DeletePermission(permissionId);
-            return Ok();
+            if (RolesAndPermissionsManager.DeletePermission(permission))
+                return Ok();
+            else
+                return BadRequest();
         }
         /// <summary>
         /// Gets the permissions of a role
@@ -216,42 +244,58 @@ namespace WebAPI.Controllers
         /// <summary>
         /// Assigns permission to Role
         /// </summary>
+        /// <response code="400">either the role or the permission doesn't exist</response>
         [ProducesResponseType(200, Type = null)]
+        [ProducesResponseType(400, Type = null)]
         [HttpPost("Permissions/Role")]
         public IActionResult AssignPermissionToRole(string roleName, string permissionName)
         {
-            RolesAndPermissionsManager.AssignPermissionToRole(roleName, permissionName);
-            return Ok();
+            if (RolesAndPermissionsManager.AssignPermissionToRole(roleName, permissionName))
+                return Ok();
+            else
+                return BadRequest();
         }
         /// <summary>
         /// Removes permission to Role
         /// </summary>
+        /// <response code="400">either the role or the permission doesn't exist</response>
+        [ProducesResponseType(200, Type = null)]
         [ProducesResponseType(200, Type = null)]
         [HttpDelete("Permissions/Role")]
         public IActionResult RemovePermissionFromRole(string roleName, string permissionName)
         {
-            RolesAndPermissionsManager.RemovePermissionFromRole(roleName, permissionName);
-            return Ok();
+            if (RolesAndPermissionsManager.RemovePermissionFromRole(roleName, permissionName))
+                return Ok();
+            else
+                return BadRequest();
         }
         /// <summary>
         /// Grants access to an action to a certain permission
         /// </summary>
+        /// <response code="400">Permission doesn't exist</response>
         [ProducesResponseType(200, Type = null)]
+        [ProducesResponseType(400, Type = null)]
         [HttpPost("Permissions/Action")]
         public IActionResult RegisterPermissionToAction(string permissionName, string actionName)
         {
-            RolesAndPermissionsManager.RegisterPermissionToAction(actionName, permissionName);
-            return Ok();
+            if (RolesAndPermissionsManager.RegisterPermissionToAction(actionName, permissionName))
+                return Ok();
+            else
+                return BadRequest();
         }
         /// <summary>
         /// Removes access to an action to a certain permission
         /// </summary>
+        /// <response code="400">Permission doesn't exist</response>
         [ProducesResponseType(200, Type = null)]
+        [ProducesResponseType(400, Type = null)]
         [HttpDelete("Permissions/Action")]
         public IActionResult RemovePermissionFromAction(string permissionName, string actionName)
         {
-            RolesAndPermissionsManager.RemovePermissionFromAction(actionName, permissionName);
-            return Ok();
+            if (RolesAndPermissionsManager.RemovePermissionFromAction(actionName, permissionName))
+                return Ok();
+            else
+                return BadRequest();
         }
     }
 }
