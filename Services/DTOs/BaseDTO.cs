@@ -15,4 +15,9 @@ namespace Services.DTOs
         public int TotalPageCount { get; set; }
         public IEnumerable<T> Data { get; set; }
     }
+    public class EnumResult
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
 }
