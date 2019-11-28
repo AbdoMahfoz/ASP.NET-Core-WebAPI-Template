@@ -31,6 +31,7 @@ using Services.RoleSystem.Implementations;
 using Services.RoleSystem.Interfaces;
 using Services.Validators;
 using Swashbuckle.AspNetCore.Swagger;
+using WebAPI.GenericControllerCreator;
 using WebAPI.Middleware;
 
 namespace WebAPI
@@ -59,6 +60,7 @@ namespace WebAPI
                 options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             })
             .AddFluentValidation()
+            .ConfigureApplicationPartManager(p => p.FeatureProviders.Add(new GenericControllerFeatureProvider()))
             .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             var appSettingsSection = Configuration.GetSection("AppSettings");
@@ -122,6 +124,9 @@ namespace WebAPI
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped(typeof(ICachedRepository<>), typeof(CachedRepository<>));
+            services.AddScoped(typeof(IGenericLogic<>), typeof(GenericLogic<>));
+
+
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IPermissionsRepository, PermissionsRepository>();
             services.AddScoped<IRolesRepository, RolesRepository>();
