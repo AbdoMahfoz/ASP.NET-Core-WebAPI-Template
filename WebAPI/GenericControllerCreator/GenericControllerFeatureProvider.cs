@@ -13,13 +13,13 @@ namespace WebAPI.GenericControllerCreator
         {
             foreach (var entityType in IncludedEntities.Types)
             {
-                var typeName = entityType.Name + "Controller";
+                var typeName = entityType.Item1.Name + "Controller";
 
                 // Check to see if there is a missing controller for this class
                 if (!feature.Controllers.Any(t => t.Name == typeName))
                 {
                     // Create a generic controller for this type
-                    var controllerType = typeof(GenericController<>).MakeGenericType(entityType.AsType()).GetTypeInfo();
+                    var controllerType = typeof(GenericController<,,>).MakeGenericType(entityType.Item1, entityType.Item2, entityType.Item3).GetTypeInfo();
                     feature.Controllers.Add(controllerType);
                 }
             }

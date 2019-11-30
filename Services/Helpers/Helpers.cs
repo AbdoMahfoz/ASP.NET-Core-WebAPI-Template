@@ -39,10 +39,14 @@ namespace Services
         }
         public static T MapTo<T>(object obj) where T : new()
         {
+            return (T)MapTo(typeof(T), obj);
+        }
+        public static object MapTo(Type T, object obj)
+        {
             if (obj == null) return default;
-            T res = new T();
+            object res = Activator.CreateInstance(T);
             Dictionary<string, PropertyInfo> OutProps = new Dictionary<string, PropertyInfo>();
-            foreach (var property in typeof(T).GetProperties())
+            foreach (var property in T.GetProperties())
             {
                 bool Ignore = (from attrib in property.CustomAttributes
                                where attrib.AttributeType == typeof(IgnoreInHelpers)

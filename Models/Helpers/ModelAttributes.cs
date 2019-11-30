@@ -10,22 +10,29 @@ namespace Models.Helpers
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class ExposeToApi : Attribute
     {
-
+        public Type DTOIn, DTOOut;
+        public ExposeToApi(Type DTOIn, Type DTOOut)
+        {
+            this.DTOIn = DTOIn;
+            this.DTOOut = DTOOut;
+        }
     }
     public static class IncludedEntities
     {
-        public static IReadOnlyList<TypeInfo> Types;
+        public static IReadOnlyList<(Type, Type, Type)> Types;
 
         static IncludedEntities()
         {
             var assembly = typeof(IncludedEntities).GetTypeInfo().Assembly;
-            var typeList = new List<TypeInfo>();
+            var typeList = new List<(Type, Type, Type)>();
 
             foreach (Type type in assembly.GetTypes())
             {
-                if (type.GetCustomAttributes(typeof(ExposeToApi), true).Length > 0)
+                var attribs = type.GetCustomAttributes(typeof(ExposeToApi), true);
+                if (attribs.Length > 0)
                 {
-                    typeList.Add(type.GetTypeInfo());
+                    ExposeToApi o = (ExposeToApi)attribs[0];
+                    typeList.Add((type, o.DTOIn, o.DTOOut));
                 }
             }
             Types = typeList;

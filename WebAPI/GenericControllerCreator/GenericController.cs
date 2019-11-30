@@ -1,23 +1,23 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using BusinessLogic.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Models.DataModels;
+using Models.GenericControllerDTOs;
 
 namespace WebAPI.GenericControllerCreator
 {
-    [Authorize]
     [Route("api/[controller]")]
     [Produces("application/json")]
     [ApiController]
     [GenericControllerName]
-    public class GenericController<T> : ControllerBase where T : BaseModel
+    public class GenericController<T, DIn, DOut> : ControllerBase where T : BaseModel, new()
+                                                                  where DOut : BaseDTO, new()
     {
-        private readonly IGenericLogic<T> _genericLogic;
+        private readonly IGenericLogic<T, DIn, DOut> _genericLogic;
 
-        public GenericController(IGenericLogic<T> logic)
+        public GenericController(IGenericLogic<T, DIn, DOut> logic)
         {
             _genericLogic = logic;
         }
@@ -39,7 +39,7 @@ namespace WebAPI.GenericControllerCreator
         /// <param name="id">Instance Id</param>
         /// <response code="200">The Instance with the Id</response>
         [HttpGet("{id}")]
-        public T Get(int id)
+        public DOut Get(int id)
         {
             return _genericLogic.Get(id);
         }
@@ -57,11 +57,11 @@ namespace WebAPI.GenericControllerCreator
         [ProducesResponseType(201, Type = typeof(int))]
         [ProducesResponseType(400, Type = typeof(string))]
         [HttpPost("Insert")]
-        public IActionResult Insert([FromBody] T instance)
+        public IActionResult Insert([FromBody]DIn instance)
         {
             if (instance == null) return BadRequest("The inserted instance is null");
-            var returnedEntity = _genericLogic.Insert(instance);
-            return StatusCode(StatusCodes.Status201Created, returnedEntity.Id);
+            var returnedId = _genericLogic.Insert(instance);
+            return StatusCode(StatusCodes.Status201Created, returnedId);
         }
 
 
@@ -75,11 +75,9 @@ namespace WebAPI.GenericControllerCreator
         /// <response code="201">Entities Inserted</response>
         [ProducesResponseType(201, Type = typeof(IEnumerable<int>))]
         [HttpPost("InsertRange")]
-        public IActionResult InsertRange([FromBody] IEnumerable<T> instances)
+        public IActionResult InsertRange([FromBody] IEnumerable<DIn> instances)
         {
-            _genericLogic.InsertRange(instances).Wait();
-            var ids = instances.Select(x => x.Id);
-            return StatusCode(StatusCodes.Status201Created, ids);
+            return StatusCode(StatusCodes.Status201Created, _genericLogic.InsertRange(instances));
         }
 
         /// <summary>
@@ -90,13 +88,13 @@ namespace WebAPI.GenericControllerCreator
         /// </remarks>
         /// <param name="instance">The instance</param>
         /// <response code="202">Instance updated</response>
-        [ProducesResponseType(202, Type = typeof(int))]
+        [ProducesResponseType(202, Type = null)]
         [HttpPut("Update")]
-        public IActionResult Update([FromBody] T instance)
+        public IActionResult Update([FromBody] DIn instance)
         {
             if (instance == null) return BadRequest();
             _genericLogic.Update(instance);
-            return StatusCode(StatusCodes.Status202Accepted, instance.Id);
+            return StatusCode(StatusCodes.Status202Accepted);
         }
 
         /// <summary>
@@ -109,12 +107,12 @@ namespace WebAPI.GenericControllerCreator
         /// <response code="202">Instances updated</response>
         [ProducesResponseType(202, Type = null)]
         [HttpPut("UpdateRange")]
-        public IActionResult UpdateRange([FromBody] IEnumerable<T> instances)
+        public IActionResult UpdateRange([FromBody] IEnumerable<DIn> instances)
         {
             foreach (var instance in instances)
                 if (instance == null)
                     return BadRequest();
-            _genericLogic.UpdateRange(instances.ToList());
+            _genericLogic.UpdateRange(instances);
             return StatusCode(StatusCodes.Status202Accepted);
         }
 

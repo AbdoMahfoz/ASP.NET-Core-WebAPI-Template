@@ -124,7 +124,7 @@ namespace WebAPI
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped(typeof(ICachedRepository<>), typeof(CachedRepository<>));
-            services.AddScoped(typeof(IGenericLogic<>), typeof(GenericLogic<>));
+            services.AddScoped(typeof(IGenericLogic<,,>), typeof(GenericLogic<,,>));
 
 
             services.AddScoped<IUserRepository, UserRepository>();

@@ -9,7 +9,7 @@ namespace WebAPI.GenericControllerCreator
     {
         public void Apply(ControllerModel controller)
         {
-            if (controller.ControllerType.GetGenericTypeDefinition() == typeof(GenericController<>))
+            if (controller.ControllerType.GetGenericTypeDefinition() == typeof(GenericController<,,>))
             {
                 var entityType = controller.ControllerType.GenericTypeArguments[0];
                 controller.ControllerName = entityType.Name;

@@ -1,58 +1,60 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BusinessLogic.Interfaces;
 using Models.DataModels;
 using Repository;
+using Services;
+using Models.GenericControllerDTOs;
 
 namespace BusinessLogic.Implementations
 {
-    public class GenericLogic<T> : IGenericLogic<T> where T : BaseModel
+    public class GenericLogic<T, DIn, DOut> : IGenericLogic<T, DIn, DOut> where T : BaseModel, new()
+                                                                          where DOut : BaseDTO, new()
     {
-        private readonly Repository<T> _genericRepository;
-        GenericLogic(Repository<T> genericRepository)
+        private readonly IRepository<T> _genericRepository;
+        public GenericLogic(IRepository<T> genericRepository)
         {
             _genericRepository = genericRepository;
         }
 
-        public IQueryable<T> GetAll()
+        public IQueryable<DOut> GetAll()
         {
-            return _genericRepository.GetAll();
+            return _genericRepository.GetAll().Select(u => Helpers.MapTo<DOut>(u));
         }
 
-        public T Get(int id)
+        public DOut Get(int id)
         {
-            return _genericRepository.Get(id);
+            return Helpers.MapTo<DOut>(_genericRepository.Get(id));
         }
 
-        public Task Insert(T entity)
+        public int Insert(DIn entity)
         {
-            return _genericRepository.Insert(entity);
+            var res = Helpers.MapTo<T>(entity);
+            _genericRepository.Insert(res).Wait();
+            return res.Id;
         }
 
-        public Task InsertRange(IEnumerable<T> entities)
+        public IEnumerable<int> InsertRange(IEnumerable<DIn> entities)
         {
-            return _genericRepository.InsertRange(entities);
+            var res = entities.Select(u => Helpers.MapTo<T>(u));
+            _genericRepository.InsertRange(res).Wait();
+            return res.Select(u => u.Id);
         }
 
-        public void Update(T entity)
+        public void Update(DIn entity)
         {
-            _genericRepository.Update(entity);
+            _genericRepository.Update(Helpers.MapTo<T>(entity));
         }
 
-        public void UpdateRange(IEnumerable<T> entities)
+        public void UpdateRange(IEnumerable<DIn> entities)
         {
-            _genericRepository.UpdateRange(entities);
+            _genericRepository.UpdateRange(entities.Select(u => Helpers.MapTo<T>(u)));
         }
 
         public void SoftDelete(int id)
         {
-            var x = Get(id);
-            _genericRepository.SoftDelete(entity: x == null
-                ? throw new KeyNotFoundException($"{id} is not found in the database") : x);
+            var x = _genericRepository.Get(id);
+            _genericRepository.SoftDelete(entity: x ?? throw new KeyNotFoundException($"{id} is not found in the database"));
         }
 
         public void SoftDeleteRange(IEnumerable<int> ids)
@@ -60,7 +62,7 @@ namespace BusinessLogic.Implementations
             List<T> entities = new List<T>();
             foreach (var id in ids)
             {
-                var x = Get(id);
+                var x =_genericRepository.Get(id);
                 if (x == null)
                     throw new KeyNotFoundException($"{id} is not found in the database");
                 else
