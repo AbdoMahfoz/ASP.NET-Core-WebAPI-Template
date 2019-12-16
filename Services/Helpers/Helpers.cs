@@ -43,7 +43,7 @@ namespace Services
         }
         public static object MapTo(Type T, object obj)
         {
-            if (obj == null) return default;
+            if (obj == null) return null;
             object res = Activator.CreateInstance(T);
             Dictionary<string, PropertyInfo> OutProps = new Dictionary<string, PropertyInfo>();
             foreach (var property in T.GetProperties())
