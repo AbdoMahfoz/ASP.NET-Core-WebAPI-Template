@@ -1,1 +1,1 @@
-git checkout deploy && git merge master && git push origin deploy && git checkout master
+git checkout deploy && git pull origin deploy && git merge master && git push origin deploy && git checkout master
