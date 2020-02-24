@@ -1,5 +1,4 @@
-﻿
-namespace Services.MailService
+﻿namespace Services.Helpers.MailService
 {
     public interface IMailService
     {

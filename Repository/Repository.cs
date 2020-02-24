@@ -1,11 +1,13 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
+using Models;
+using Models.DataModels;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Models;
-using Models.DataModels;
 
 namespace Repository
 {
@@ -25,8 +27,8 @@ namespace Repository
         public virtual IQueryable<T> GetAll()
         {
             return from row in Entities
-                   where !row.IsDeleted
-                   select row;
+                where !row.IsDeleted
+                select row;
         }
 
         public virtual T Get(int id)
@@ -101,6 +103,7 @@ namespace Repository
                 item.IsDeleted = true;
                 item.DeletedDate = DateTime.UtcNow;
             }
+
             SaveChanges();
             Logger.LogInformation($"{Entities.GetType()} are softly deleted from Database");
         }
