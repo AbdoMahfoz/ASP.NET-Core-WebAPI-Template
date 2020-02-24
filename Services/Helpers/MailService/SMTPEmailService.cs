@@ -1,18 +1,20 @@
-﻿using MimeKit;
-using System;
+﻿using System;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
+using MimeKit;
 using Models.Helpers;
 
-namespace Services.MailService
+namespace Services.Helpers.MailService
 {
-    public class SMTPMailService : IMailService
+    public class SmtpMailService : IMailService
     {
         private readonly IOptions<AppSettings> json;
-        public SMTPMailService(IOptions<AppSettings> json)
+
+        public SmtpMailService(IOptions<AppSettings> json)
         {
             this.json = json;
         }
+
         public void SendEmail(string toEmail, string message, string fromTitle = "", string Subject = "")
         {
             var options = json.Value.SMTP;

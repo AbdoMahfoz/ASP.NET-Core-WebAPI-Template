@@ -6,6 +6,7 @@ using Models.DataModels;
 using Repository.ExtendedRepositories;
 using Services;
 using Services.DTOs;
+using Services.Helpers;
 using Services.RoleSystem.Interfaces;
 
 namespace BusinessLogic.Implementations
@@ -28,17 +29,17 @@ namespace BusinessLogic.Implementations
 
         public IQueryable<RoleDTO> GetAllRoles()
         {
-            return RolesRepository.GetAll().Select(u => Helpers.MapTo<RoleDTO>(u));
+            return RolesRepository.GetAll().Select(u => ObjectHelpers.MapTo<RoleDTO>(u));
         }
 
         public RoleDTO GetRoleById(int roleId)
         {
-            return Helpers.MapTo<RoleDTO>(RolesRepository.Get(roleId));
+            return ObjectHelpers.MapTo<RoleDTO>(RolesRepository.Get(roleId));
         }
 
         public RoleDTO GetRoleByName(string roleName)
         {
-            return Helpers.MapTo<RoleDTO>(RolesRepository.GetRole(roleName));
+            return ObjectHelpers.MapTo<RoleDTO>(RolesRepository.GetRole(roleName));
         }
 
         public int InsertRole(string newRole)
@@ -93,17 +94,17 @@ namespace BusinessLogic.Implementations
 
         public IQueryable<PermissionDTO> GetAllPermissions()
         {
-            return PermissionsRepository.GetAll().Select(x => Helpers.MapTo<PermissionDTO>(x));
+            return PermissionsRepository.GetAll().Select(x => ObjectHelpers.MapTo<PermissionDTO>(x));
         }
 
         public PermissionDTO GetPermissionById(int permissionId)
         {
-            return Helpers.MapTo<PermissionDTO>(PermissionsRepository.Get(permissionId));
+            return ObjectHelpers.MapTo<PermissionDTO>(PermissionsRepository.Get(permissionId));
         }
 
         public PermissionDTO GetPermissionByName(string permissionName)
         {
-            return Helpers.MapTo<PermissionDTO>(PermissionsRepository.GetPermission(permissionName));
+            return ObjectHelpers.MapTo<PermissionDTO>(PermissionsRepository.GetPermission(permissionName));
         }
 
         public int InsertPermission(string newPermission)
@@ -148,7 +149,7 @@ namespace BusinessLogic.Implementations
         {
             if (!RolesRepository.CheckRoleExists(roleName))
                 return null;
-            return PermissionsRepository.GetPermissionsOfRole(roleName).Select(x => Helpers.MapTo<PermissionDTO>(x));
+            return PermissionsRepository.GetPermissionsOfRole(roleName).Select(x => ObjectHelpers.MapTo<PermissionDTO>(x));
         }
 
         public bool AssignPermissionToRole(string roleName, string permissionName)

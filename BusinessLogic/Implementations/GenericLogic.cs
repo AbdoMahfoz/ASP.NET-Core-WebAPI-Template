@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using BusinessLogic.Interfaces;
+﻿using BusinessLogic.Interfaces;
+
 using Models.DataModels;
-using Repository;
-using Services;
 using Models.GenericControllerDTOs;
+
+using Repository;
+
+using Services.Helpers;
+
+using System.Collections.Generic;
+using System.Linq;
 
 namespace BusinessLogic.Implementations
 {
@@ -19,36 +23,36 @@ namespace BusinessLogic.Implementations
 
         public IQueryable<DOut> GetAll()
         {
-            return _genericRepository.GetAll().Select(u => Helpers.MapTo<DOut>(u));
+            return _genericRepository.GetAll().Select(u => ObjectHelpers.MapTo<DOut>(u));
         }
 
         public DOut Get(int id)
         {
-            return Helpers.MapTo<DOut>(_genericRepository.Get(id));
+            return ObjectHelpers.MapTo<DOut>(_genericRepository.Get(id));
         }
 
         public int Insert(DIn entity)
         {
-            var res = Helpers.MapTo<T>(entity);
+            var res = ObjectHelpers.MapTo<T>(entity);
             _genericRepository.Insert(res).Wait();
             return res.Id;
         }
 
         public IEnumerable<int> InsertRange(IEnumerable<DIn> entities)
         {
-            var res = entities.Select(u => Helpers.MapTo<T>(u));
+            var res = entities.Select(u => ObjectHelpers.MapTo<T>(u));
             _genericRepository.InsertRange(res).Wait();
             return res.Select(u => u.Id);
         }
 
         public void Update(DIn entity)
         {
-            _genericRepository.Update(Helpers.MapTo<T>(entity));
+            _genericRepository.Update(ObjectHelpers.MapTo<T>(entity));
         }
 
         public void UpdateRange(IEnumerable<DIn> entities)
         {
-            _genericRepository.UpdateRange(entities.Select(u => Helpers.MapTo<T>(u)));
+            _genericRepository.UpdateRange(entities.Select(u => ObjectHelpers.MapTo<T>(u)));
         }
 
         public void SoftDelete(int id)
