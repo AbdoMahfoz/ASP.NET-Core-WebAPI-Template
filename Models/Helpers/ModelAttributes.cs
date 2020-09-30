@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Models.Helpers
@@ -28,7 +29,7 @@ namespace Models.Helpers
             var assembly = typeof(IncludedEntities).GetTypeInfo().Assembly;
             var typeList = new List<(Type, Type, Type)>();
 
-            foreach (Type type in assembly.GetTypes())
+            foreach (Type type in assembly.GetLoadableTypes())
             {
                 var attribs = type.GetCustomAttributes(typeof(ExposeToApi), true);
                 if (attribs.Length > 0)
@@ -39,6 +40,18 @@ namespace Models.Helpers
             }
 
             Types = typeList;
+        }
+        public static IEnumerable<Type> GetLoadableTypes(this Assembly assembly)
+        {
+            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+            try
+            {
+                return assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                return e.Types.Where(t => t != null);
+            }
         }
     }
 }

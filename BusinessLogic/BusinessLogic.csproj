@@ -16,6 +16,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="MailKit" Version="2.5.1" />
+    <PackageReference Include="MailKit" Version="2.9.0" />
   </ItemGroup>
 </Project>

@@ -8,9 +8,9 @@
     <ProjectReference Include="..\Repository\Repository.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FluentValidation.AspNetCore" Version="8.6.1" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="9.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
-    <PackageReference Include="MimeKit" Version="2.5.1" />
-    <PackageReference Include="NETCore.MailKit" Version="2.0.2" />
+    <PackageReference Include="MimeKit" Version="2.9.2" />
+    <PackageReference Include="NETCore.MailKit" Version="2.0.3" />
   </ItemGroup>
 </Project>
