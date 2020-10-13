@@ -21,3 +21,30 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
+
+# Role System
+The template includes a custom-made role system simplifies the process of setting roles and permissions.
+It allows you to assign roles/permissions
+ - **Dynamically**, using the provided endpoints.
+ - **Statically**, using the provided attributes.
+	- `HasRole`/`HasPermission` attributes can be decorated on any controller/action to forbid acces to it outside of the given roles.
+	
+Roles can have a variable amount of permissions. Users can be assigned roles or permissions or both. If a user is assigned a role that has a permission, permission A for example, and a certain endpoint requires this permission, the system will automatically deduce that this user has access because the role of the user includes the required permission. endpoints can also require roles if so desired.
+
+## Examples
+### Using attributes to statically define roles/permissions
+```cs
+[HasRole("Admin")]
+[HasPermission("dangerousPermission")]
+public IActionResult DoSomethingExtremelyDangerous(string dangerousCommand)
+{
+    ....
+}
+```
+### Using endpoints to dynamically set roles/permissions
+ - refer to swagger for the full documentation of endpoints and the example values
+
+## Notes
+ - Users can only be assigned roles/permissions through endpoints defined in the swagger documentation
+ - Make sure that the `RolesAndPermissions` controller is guarded with strict roles/permissions. You don't want your users missing around with that.
+
