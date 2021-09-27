@@ -23,7 +23,7 @@ namespace Services.Helpers.MailService
             var from = new MailboxAddress(fromTitle, options.Email);
             email.From.Add(from);
 
-            var to = new MailboxAddress(toEmail);
+            var to = MailboxAddress.Parse(toEmail);
             email.To.Add(to);
 
             email.Subject = Subject;

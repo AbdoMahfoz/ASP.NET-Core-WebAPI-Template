@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Repository\Repository.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FluentValidation.AspNetCore" Version="9.2.0" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="10.3.3" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
-    <PackageReference Include="MimeKit" Version="2.9.2" />
+    <PackageReference Include="MimeKit" Version="2.15.1" />
     <PackageReference Include="NETCore.MailKit" Version="2.0.3" />
   </ItemGroup>
 </Project>
