@@ -5,19 +5,21 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BusinessLogic.Initializers
 {
-    public class BaseInitializer
+    public abstract class BaseInitializer
     {
-        public BaseInitializer(IServiceProvider Provider)
+        static public void StartInitialization(IServiceCollection serviceCollection)
         {
-            foreach (Type type in (from type in Assembly.GetAssembly(typeof(BaseInitializer)).GetTypes()
-                                   where type.IsClass && !type.IsAbstract && type.IsSubclassOf(typeof(BaseInitializer))
-                                   select type))
+            var provider = serviceCollection.BuildServiceProvider();
+            var currentAssembly = Assembly.GetAssembly(typeof(BaseInitializer));
+            if (currentAssembly == null) throw new NullReferenceException();
+            foreach (Type type in (from type in currentAssembly.GetTypes()
+                where type.IsClass && !type.IsAbstract && type.IsSubclassOf(typeof(BaseInitializer))
+                select type))
             {
-                ((BaseInitializer)ActivatorUtilities.CreateInstance(Provider, type)).Initialize();
+                ((BaseInitializer)ActivatorUtilities.CreateInstance(provider, type)).Initialize();
             }
         }
-        protected BaseInitializer() { }
-        public virtual void Initialize()
+        protected virtual void Initialize()
         {
         }
     }

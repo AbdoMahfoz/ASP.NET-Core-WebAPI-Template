@@ -14,7 +14,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -44,16 +43,12 @@ namespace WebAPI
 {
     public class Startup
     {
-        private readonly ILogger _logger;
-
-        public Startup(IConfiguration configuration, ILogger<Startup> logger)
+        public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            _logger = logger;
         }
-
-        public IConfiguration Configuration { get; }
-
+        private IConfiguration Configuration { get; }
+        
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<CookiePolicyOptions>(options =>
@@ -180,8 +175,8 @@ namespace WebAPI
             {
                 db.Database.Migrate();
             }
-
-            new BaseInitializer(services.BuildServiceProvider());
+            
+            BaseInitializer.StartInitialization(services);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
