@@ -1,10 +1,8 @@
 ﻿using BusinessLogic.Implementations;
 using BusinessLogic.Initializers;
 using BusinessLogic.Interfaces;
-
 using FluentValidation;
 using FluentValidation.AspNetCore;
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -16,26 +14,21 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-
 using Models;
 using Models.Helpers;
-
 using Repository;
 using Repository.ExtendedRepositories;
-
 using Services.DTOs;
 using Services.Helpers.MailService;
 using Services.RoleSystem;
 using Services.RoleSystem.Implementations;
 using Services.RoleSystem.Interfaces;
 using Services.Validators;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
-
 using WebAPI.GenericControllerCreator;
 using WebAPI.Middleware;
 
@@ -47,14 +40,15 @@ namespace WebAPI
         {
             Configuration = configuration;
         }
+
         private IConfiguration Configuration { get; }
-        
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<CookiePolicyOptions>(options =>
             {
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-                options.CheckConsentNeeded = context => true;
+                options.CheckConsentNeeded = _ => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
@@ -97,7 +91,7 @@ namespace WebAPI
             services.AddAuthorization(options =>
             {
                 options.DefaultPolicy = new AuthorizationPolicy(
-                    new IAuthorizationRequirement[] {new AccountRequirement()},
+                    new IAuthorizationRequirement[] { new AccountRequirement() },
                     options.DefaultPolicy.AuthenticationSchemes
                 );
             });
@@ -109,7 +103,7 @@ namespace WebAPI
                     Version = "v1",
                     Title = appSettings.SiteData.Name,
                     Description = appSettings.SiteData.APIDescription,
-                    Contact = new OpenApiContact {Name = appSettings.Contact.Name, Email = appSettings.Contact.Email}
+                    Contact = new OpenApiContact { Name = appSettings.Contact.Name, Email = appSettings.Contact.Email }
                 });
                 c.AddSecurityDefinition("Bearer",
                     new OpenApiSecurityScheme
@@ -171,11 +165,11 @@ namespace WebAPI
             if (appSettings.ValidateRolesFromToken) services.AddSingleton<IRoleValidator, TokenRoleValidator>();
             else services.AddScoped<IRoleValidator, DbRoleValidator>();
 
-            using (ApplicationDbContext db = new ApplicationDbContext())
+            using (var db = new ApplicationDbContext())
             {
                 db.Database.Migrate();
             }
-            
+
             BaseInitializer.StartInitialization(services);
         }
 

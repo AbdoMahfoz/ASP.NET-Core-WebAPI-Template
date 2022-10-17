@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using Models.DataModels;
 using Services.DTOs;
@@ -12,56 +14,113 @@ namespace Services.Helpers
         public static bool HasNullOrEmptyStrings<T>(T obj)
         {
             if (obj == null) return true;
-            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
-            {
-                if (!propertyInfo.CanRead) continue;
-                if (propertyInfo.PropertyType == typeof(string))
-                {
-                    string val = (string) propertyInfo.GetValue(obj);
-                    return string.IsNullOrWhiteSpace(val);
-                }
-            }
-
-            return false;
-        }
-
-        public static void UpdateObjects<T>(T oldobj, T newobj)
-        {
-            if (oldobj == null || newobj == null) throw new ArgumentNullException();
-            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
-            {
-                if (!propertyInfo.CanRead) continue;
-                object val = propertyInfo.GetValue(newobj);
-                if (val != null) propertyInfo.SetValue(oldobj, val);
-            }
+            return (from propertyInfo in typeof(T).GetProperties()
+                where propertyInfo.CanRead
+                where propertyInfo.PropertyType == typeof(string)
+                select (string)propertyInfo.GetValue(obj)
+                into val
+                select string.IsNullOrWhiteSpace(val)).FirstOrDefault();
         }
 
         public static T MapTo<T>(object obj) where T : new()
         {
-            return (T) MapTo(typeof(T), obj);
+            return (T)MapTo(typeof(T), obj);
         }
 
         public static object MapTo(Type T, object obj)
         {
             if (obj == null) return null;
-            object res = Activator.CreateInstance(T);
-            Dictionary<string, PropertyInfo> OutProps = new Dictionary<string, PropertyInfo>();
+            var res = Activator.CreateInstance(T);
+            var outProps = new Dictionary<string, PropertyInfo>();
             foreach (var property in T.GetProperties())
             {
-                bool Ignore = (from attrib in property.CustomAttributes
+                var ignore = (from attrib in property.CustomAttributes
                     where attrib.AttributeType == typeof(IgnoreInHelpers)
                     select attrib).Any();
-                if (!Ignore && property.CanWrite) OutProps.Add(property.Name, property);
+                if (!ignore && property.CanWrite) outProps.Add(property.Name, property);
             }
 
-            foreach (var InProp in obj.GetType().GetProperties())
+            foreach (var inProp in obj.GetType().GetProperties())
             {
-                bool Ignore = (from attrib in InProp.CustomAttributes
+                var ignore = (from attrib in inProp.CustomAttributes
                     where attrib.AttributeType == typeof(IgnoreInHelpers)
                     select attrib).Any();
-                if (!Ignore && InProp.CanRead && OutProps.TryGetValue(InProp.Name, out PropertyInfo OutProp))
-                    if (OutProp.PropertyType == InProp.PropertyType)
-                        OutProp.SetValue(res, InProp.GetValue(obj));
+                if (ignore || !inProp.CanRead || !outProps.TryGetValue(inProp.Name, out var outProp)) continue;
+                if (outProp.PropertyType == inProp.PropertyType)
+                {
+                    outProp.SetValue(res, inProp.GetValue(obj));
+                    if (outProp.PropertyType != typeof(DateTime)) continue;
+                    var dateTime = (DateTime)outProp.GetValue(res)!;
+                    outProp.SetValue(res, dateTime.ToUniversalTime());
+                }
+                else if (outProp.PropertyType == typeof(byte[]) && inProp.PropertyType == typeof(string))
+                {
+                    try
+                    {
+                        if (inProp.GetValue(obj) is string val)
+                        {
+                            if (val.Contains(','))
+                            {
+                                val = val[(val.IndexOf(',') + 1)..];
+                            }
+
+                            outProp.SetValue(res, Convert.FromBase64String(val));
+                        }
+                    }
+                    catch (FormatException)
+                    {
+                    }
+                }
+                else if (outProp.PropertyType == typeof(string) && inProp.PropertyType == typeof(byte[]))
+                {
+                    try
+                    {
+                        if (inProp.GetValue(obj) is byte[] val)
+                        {
+                            outProp.SetValue(res, Convert.ToBase64String(val));
+                        }
+                    }
+                    catch (FormatException)
+                    {
+                    }
+                }
+                else if (outProp.PropertyType.IsAssignableTo(typeof(IEnumerable)) &&
+                         inProp.PropertyType.IsAssignableTo(typeof(IEnumerable)))
+                {
+                    var values = (IEnumerable<object>)inProp.GetValue(obj);
+                    if (values == null) continue;
+                    var innerType = outProp.PropertyType.GetGenericArguments()[0];
+                    var parameterExpression = Expression.Parameter(inProp.PropertyType.GetGenericArguments()[0]);
+                    var mapToMethod = typeof(ObjectHelpers).GetMethods()
+                        .Single(u => u.Name == "MapTo" && u.IsGenericMethod).MakeGenericMethod(innerType);
+                    var callExpression = Expression.Call(null, mapToMethod, parameterExpression);
+                    var lambda = Expression.Lambda(callExpression, parameterExpression);
+                    var selectMethod = typeof(Enumerable).GetMethods().First(u => u.Name == "Select")
+                        .MakeGenericMethod(inProp.PropertyType.GetGenericArguments()[0],
+                            outProp.PropertyType.GetGenericArguments()[0]);
+                    var toListMethod = typeof(Enumerable).GetMethods().First(u => u.Name == "ToList")
+                        .MakeGenericMethod(innerType);
+                    var selectExpression = Expression.Call(null, selectMethod, Expression.Constant(values), lambda);
+                    selectExpression = Expression.Call(null, toListMethod, selectExpression);
+                    var setValueMethod = typeof(PropertyInfo).GetMethods()
+                        .Single(u => u.Name == "SetValue" && u.GetParameters().Length == 2);
+                    var outPropParameter = Expression.Parameter(typeof(PropertyInfo));
+                    var finalExpression = Expression.Call(outPropParameter, setValueMethod,
+                        Expression.Constant(res), selectExpression);
+                    Expression.Lambda<Action<PropertyInfo>>(finalExpression, outPropParameter).Compile()(outProp);
+                }
+                else if (outProp.PropertyType.IsClass && inProp.PropertyType.IsClass)
+                {
+                    try
+                    {
+                        outProp.SetValue(res, MapTo(outProp.PropertyType, inProp.GetValue(obj)));
+                    }
+                    catch (Exception)
+                    {
+                        // It is possible that some exception may occur while attempting to recursively set properties
+                        // In that case, we can just ignore the property without halting the application
+                    }
+                }
             }
 
             return res;
@@ -69,8 +128,8 @@ namespace Services.Helpers
 
         public static IEnumerable<EnumResult> GetEnumOptions(string EnumName)
         {
-            List<EnumResult> res = new List<EnumResult>();
-            Type t = (from type in Assembly.GetAssembly(typeof(BaseModel)).GetTypes()
+            var res = new List<EnumResult>();
+            var t = (from type in Assembly.GetAssembly(typeof(BaseModel))?.GetTypes()
                 where type.IsEnum && type.Name == EnumName
                 select type).SingleOrDefault();
             if (t == null) return null;
