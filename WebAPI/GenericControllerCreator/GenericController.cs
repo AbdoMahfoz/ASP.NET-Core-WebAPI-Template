@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using BusinessLogic.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Models.DataModels;
 using Models.GenericControllerDTOs;
 
@@ -12,10 +13,12 @@ namespace WebAPI.GenericControllerCreator
     [Produces("application/json")]
     [ApiController]
     [GenericControllerName]
+    [Authorize]
     public class GenericController<T, DIn, DOut> : ControllerBase where T : BaseModel, new()
-                                                                  where DOut : BaseDTO, new()
+        where DOut : BaseDTO, new()
     {
         private readonly IGenericLogic<T, DIn, DOut> _genericLogic;
+        public static string modelName = "";
 
         public GenericController(IGenericLogic<T, DIn, DOut> logic)
         {
@@ -25,12 +28,18 @@ namespace WebAPI.GenericControllerCreator
         /// <summary>
         ///     Returns all the ids of the instances of The Model.
         /// </summary>
-        /// <response code="200">All Instances Ids</response>
-        [ProducesResponseType(200, Type = typeof(IEnumerable<int>))]
-        [HttpGet("GetAll")]
-        public IActionResult GetAll()
+        /// <remarks>
+        ///     You can provide additional ids as a json object, which will be used to filter resultant objects <br/>
+        ///     This is useful when, for an example, you want to get all objects that belong to one specific object <br/>
+        ///     That it's ids is known beforehand.
+        /// </remarks>
+        [HttpPost("GetAll")]
+        public IEnumerable<DOut> GetAll(
+            [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] IDictionary<string, object> relationalIds = null)
         {
-            return StatusCode(StatusCodes.Status200OK, _genericLogic.GetAll().ToList().Select(x => x.Id));
+            var res = _genericLogic.GetAll(relationalIds);
+            if (res == null) throw new BadHttpRequestException("relationalIds malformed");
+            return res;
         }
 
         /// <summary>
@@ -57,7 +66,7 @@ namespace WebAPI.GenericControllerCreator
         [ProducesResponseType(201, Type = typeof(int))]
         [ProducesResponseType(400, Type = typeof(string))]
         [HttpPost("Insert")]
-        public IActionResult Insert([FromBody]DIn instance)
+        public IActionResult Insert([FromBody] DIn instance)
         {
             if (instance == null) return BadRequest("The inserted instance is null");
             var returnedId = _genericLogic.Insert(instance);
@@ -86,33 +95,13 @@ namespace WebAPI.GenericControllerCreator
         /// <remarks>
         ///     NO nulls are accepted
         /// </remarks>
-        /// <param name="instance">The instance</param>
         /// <response code="202">Instance updated</response>
         [ProducesResponseType(202, Type = null)]
         [HttpPut("Update")]
-        public IActionResult Update([FromBody] DIn instance)
+        public IActionResult Update([FromQuery] int Id, [FromBody] DIn instance)
         {
             if (instance == null) return BadRequest();
-            _genericLogic.Update(instance);
-            return StatusCode(StatusCodes.Status202Accepted);
-        }
-
-        /// <summary>
-        ///     Updates a List of instances of The Model into the Database
-        /// </summary>
-        /// <remarks>
-        ///     NO nulls are accepted
-        /// </remarks>
-        /// <param name="instances">The instance</param>
-        /// <response code="202">Instances updated</response>
-        [ProducesResponseType(202, Type = null)]
-        [HttpPut("UpdateRange")]
-        public IActionResult UpdateRange([FromBody] IEnumerable<DIn> instances)
-        {
-            foreach (var instance in instances)
-                if (instance == null)
-                    return BadRequest();
-            _genericLogic.UpdateRange(instances);
+            _genericLogic.Update(Id, instance);
             return StatusCode(StatusCodes.Status202Accepted);
         }
 
@@ -122,13 +111,13 @@ namespace WebAPI.GenericControllerCreator
         /// <remarks>
         ///     Depends on the id only
         /// </remarks>
-        /// <param name="Id">The instance id</param>
         /// <response code="202">instance Deleted</response>
         [ProducesResponseType(202, Type = null)]
         [HttpDelete("Delete")]
-        public IActionResult Delete(int Id)
+        public IActionResult Delete(int Id, bool IsHard)
         {
-            _genericLogic.SoftDelete(Id);
+            if (IsHard) _genericLogic.HardDelete(Id);
+            else _genericLogic.SoftDelete(Id);
             return StatusCode(StatusCodes.Status202Accepted);
         }
 
