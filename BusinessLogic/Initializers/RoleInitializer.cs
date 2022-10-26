@@ -1,33 +1,78 @@
 ﻿using Repository.ExtendedRepositories;
 using System.Linq;
 using Models.DataModels;
-using System.Threading.Tasks;
+using BusinessLogic.Interfaces;
+using Models;
+using Models.Helpers;
+using Services.DTOs;
+using Services.RoleSystem;
 
-namespace BusinessLogic.Initializers
+namespace BusinessLogic.Initializers;
+
+// ReSharper disable once UnusedType.Global
+public class RoleInitializer : BaseInitializer
 {
-    public class RoleInitializer : BaseInitializer
+    private readonly IRolesRepository _roleRepository;
+    private readonly IPermissionsRepository _permissionsRepository;
+    private readonly IAccountLogic _accountLogic;
+    private readonly IUserRepository _userRepository;
+
+    public RoleInitializer(IRolesRepository roleRepository, IPermissionsRepository permissionsRepository,
+        IAccountLogic accountLogic, IUserRepository userRepository)
     {
-        private readonly IRolesRepository RoleRepository;
-        private readonly IPermissionsRepository PermissionsRepository;
-        public RoleInitializer(IRolesRepository RoleRepository, IPermissionsRepository PermissionsRepository)
+        _roleRepository = roleRepository;
+        _permissionsRepository = permissionsRepository;
+        _accountLogic = accountLogic;
+        _userRepository = userRepository;
+    }
+
+    protected override void Initialize()
+    {
+        var modelVerbs = typeof(CrudVerb).GetEnumNames();
+
+        var currentPermissions = IncludedEntities.Types
+            .SelectMany(u => modelVerbs.Select(x => $"{x} {u.Item1.Name}"))
+            .Concat(typeof(PermissionNames).GetEnumNames()).ToArray();
+        var existingPermissions = _permissionsRepository.GetAll().Select(u => u.Name).ToArray();
+        var missingPermissions = currentPermissions.Where(u => !existingPermissions.Contains(u)).ToArray();
+        if (missingPermissions.Length > 0)
         {
-            this.RoleRepository = RoleRepository;
-            this.PermissionsRepository = PermissionsRepository;
+            _permissionsRepository.InsertRange(missingPermissions.Select(u => new Permission { Name = u }));
         }
-        protected override void Initialize()
+
+        if (!_roleRepository.GetAll().Any())
         {
-            if (RoleRepository.GetAll().Any()) return;
-            RoleRepository.Insert(new Role { Name = "User" });
-            Role admin = new Role { Name = "Admin" };
-            RoleRepository.Insert(admin).Wait();
-            if (!PermissionsRepository.GetAll().Where(u => u.Name == "CanManageRoles").Any())
+            var admin = new Role { Name = RoleNames.Admin.ToString() };
+            _roleRepository.Insert(admin).Wait();
+
+            var dataManager = new Role { Name = RoleNames.DataManager.ToString() };
+            _roleRepository.Insert(dataManager).Wait();
+
+            var permissions = new[] { "Read *", "Create *", "Update *", "Delete *" };
+            foreach (var permission in permissions)
             {
-                PermissionsRepository.Insert(new Permission { Name = "CanManageRoles" }).Wait();
-            }
-            foreach (int PermissionId in PermissionsRepository.GetAll().Select(u => u.Id).ToList())
-            {
-                PermissionsRepository.AssignPermissionToRole(PermissionId, admin.Id);
+                var permObj = new Permission { Name = permission };
+                _permissionsRepository.Insert(permObj).Wait();
+                _permissionsRepository.AssignPermissionToRole(permObj.Id, dataManager.Id);
+                _permissionsRepository.AssignPermissionToRole(permObj.Id, admin.Id);
             }
         }
+            
+        var currentRoles = typeof(RoleNames).GetEnumNames();
+        var existingRoles = _roleRepository.GetAll().Select(u => u.Name).ToArray();
+        var missingRoles = currentRoles.Where(u => !existingRoles.Contains(u)).ToArray();
+        if (missingRoles.Length > 0)
+        {
+            _roleRepository.InsertRange(missingRoles.Select(u => new Role { Name = u }));
+        }
+
+        foreach (var permission in missingPermissions)
+        {
+            _permissionsRepository.AssignPermissionToRole(permission, RoleNames.Admin.ToString());
+        }
+
+        if (_userRepository.GetAll().Any()) return;
+        _accountLogic.Register(new UserAuthenticationRequest { Username = "Admin", Password = "123123123" },
+            "Admin");
     }
 }

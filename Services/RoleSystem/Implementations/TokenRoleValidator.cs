@@ -19,6 +19,18 @@ namespace Services.RoleSystem.Implementations
             }
             return true;
         }
+        public bool ValidateOnePermission(ClaimsPrincipal User, string[] Permissions)
+        {
+            SortedSet<string> UserPermissions = new SortedSet<string>(User.GetPermissions());
+            foreach(string Permission in Permissions)
+            {
+                if(UserPermissions.Contains(Permission))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         public bool ValidateRoles(ClaimsPrincipal User, string[] Roles)
         {
             SortedSet<string> UserRoles = new SortedSet<string>(User.GetRoles());

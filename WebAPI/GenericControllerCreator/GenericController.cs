@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Models.DataModels;
 using Models.GenericControllerDTOs;
+using Services.RoleSystem;
 
 namespace WebAPI.GenericControllerCreator
 {
@@ -15,7 +16,7 @@ namespace WebAPI.GenericControllerCreator
     [GenericControllerName]
     [Authorize]
     public class GenericController<T, DIn, DOut> : ControllerBase where T : BaseModel, new()
-        where DOut : BaseDTO, new()
+                                                                  where DOut : BaseDTO, new()
     {
         private readonly IGenericLogic<T, DIn, DOut> _genericLogic;
         public static string modelName = "";
@@ -34,8 +35,8 @@ namespace WebAPI.GenericControllerCreator
         ///     That it's ids is known beforehand.
         /// </remarks>
         [HttpPost("GetAll")]
-        public IEnumerable<DOut> GetAll(
-            [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] IDictionary<string, object> relationalIds = null)
+        [HasCrudPermission(CrudVerb.Read)]
+        public IEnumerable<DOut> GetAll([FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] IDictionary<string, object> relationalIds = null)
         {
             var res = _genericLogic.GetAll(relationalIds);
             if (res == null) throw new BadHttpRequestException("relationalIds malformed");
@@ -48,6 +49,7 @@ namespace WebAPI.GenericControllerCreator
         /// <param name="id">Instance Id</param>
         /// <response code="200">The Instance with the Id</response>
         [HttpGet("{id}")]
+        [HasCrudPermission(CrudVerb.Read)]
         public DOut Get(int id)
         {
             return _genericLogic.Get(id);
@@ -66,7 +68,8 @@ namespace WebAPI.GenericControllerCreator
         [ProducesResponseType(201, Type = typeof(int))]
         [ProducesResponseType(400, Type = typeof(string))]
         [HttpPost("Insert")]
-        public IActionResult Insert([FromBody] DIn instance)
+        [HasCrudPermission(CrudVerb.Create)]
+        public IActionResult Insert([FromBody]DIn instance)
         {
             if (instance == null) return BadRequest("The inserted instance is null");
             var returnedId = _genericLogic.Insert(instance);
@@ -84,6 +87,7 @@ namespace WebAPI.GenericControllerCreator
         /// <response code="201">Entities Inserted</response>
         [ProducesResponseType(201, Type = typeof(IEnumerable<int>))]
         [HttpPost("InsertRange")]
+        [HasCrudPermission(CrudVerb.Create)]
         public IActionResult InsertRange([FromBody] IEnumerable<DIn> instances)
         {
             return StatusCode(StatusCodes.Status201Created, _genericLogic.InsertRange(instances));
@@ -98,6 +102,7 @@ namespace WebAPI.GenericControllerCreator
         /// <response code="202">Instance updated</response>
         [ProducesResponseType(202, Type = null)]
         [HttpPut("Update")]
+        [HasCrudPermission(CrudVerb.Update)]
         public IActionResult Update([FromQuery] int Id, [FromBody] DIn instance)
         {
             if (instance == null) return BadRequest();
@@ -114,6 +119,7 @@ namespace WebAPI.GenericControllerCreator
         /// <response code="202">instance Deleted</response>
         [ProducesResponseType(202, Type = null)]
         [HttpDelete("Delete")]
+        [HasCrudPermission(CrudVerb.Delete)]
         public IActionResult Delete(int Id, bool IsHard)
         {
             if (IsHard) _genericLogic.HardDelete(Id);
@@ -128,6 +134,7 @@ namespace WebAPI.GenericControllerCreator
         /// <response code="202">instances Deleted</response>
         [ProducesResponseType(202, Type = null)]
         [HttpDelete("DeleteRange")]
+        [HasCrudPermission(CrudVerb.Delete)]
         public IActionResult DeleteEnablers([FromBody] IEnumerable<int> ids)
         {
             if (ids == null) return BadRequest();
