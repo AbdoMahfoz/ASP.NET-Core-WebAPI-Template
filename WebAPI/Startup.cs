@@ -159,7 +159,7 @@ namespace WebAPI
             services.AddTransient<IRolesAndPermissionsManager, RolesAndPermissionsManager>();
 
 
-            services.AddSingleton<IPasswordManager, RFC2898PasswordManager>();
+            services.AddSingleton<IPasswordManager, Rfc2898PasswordManager>();
 
 
             if (appSettings.ValidateRolesFromToken) services.AddSingleton<IRoleValidator, TokenRoleValidator>();
