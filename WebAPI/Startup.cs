@@ -60,13 +60,13 @@ namespace WebAPI
                     opt.Filters.Add(typeof(RoleActionFilter));
                     opt.EnableEndpointRouting = false;
                 })
-                .AddFluentValidation()
                 .ConfigureApplicationPartManager(p => p.FeatureProviders.Add(new GenericControllerFeatureProvider()));
+
+            services.AddFluentValidationAutoValidation().AddFluentValidationClientsideAdapters();
 
             var appSettingsSection = Configuration.GetSection("AppSettings");
             services.Configure<AppSettings>(appSettingsSection);
             var appSettings = appSettingsSection.Get<AppSettings>();
-            ApplicationDbContext.LocalDatabaseName = appSettings.LocalDatabaseName;
             var key = Encoding.ASCII.GetBytes(appSettings.Secret);
             services.AddDbContext<ApplicationDbContext>(ApplicationDbContext.Configure);
 
