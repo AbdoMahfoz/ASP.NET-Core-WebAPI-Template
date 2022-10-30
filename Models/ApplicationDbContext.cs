@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Models.DataModels;
 using Models.Helpers;
@@ -77,6 +78,26 @@ namespace Models
             {
                 options.UseSqlServer(appSettings.MSSQL.ConnectionString);
             }
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // add is deleted query filter for entities having an existing IsDeleted property
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var isDeletedProperty = entityType.FindProperty("IsDeleted");
+                if (isDeletedProperty != null && isDeletedProperty.ClrType == typeof(bool))
+                {
+                    var entityBuilder = modelBuilder.Entity(entityType.ClrType);
+                    var parameter = Expression.Parameter(entityType.ClrType, "e");
+                    var methodInfo = typeof(EF).GetMethod(nameof(EF.Property))!.MakeGenericMethod(typeof(bool))!;
+                    var efPropertyCall = Expression.Call(null, methodInfo, parameter, Expression.Constant("IsDeleted"));
+                    var body = Expression.MakeBinary(ExpressionType.Equal, efPropertyCall, Expression.Constant(false));
+                    var expression = Expression.Lambda(body, parameter);
+                    entityBuilder.HasQueryFilter(expression);
+                }
+            }
+
         }
     }
 }
