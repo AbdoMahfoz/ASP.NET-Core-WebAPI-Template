@@ -17,12 +17,12 @@ namespace Models
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<ActionRole> ActionRoles { get; set; }
         public DbSet<ActionPermission> ActionPermissions { get; set; }
-
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        
+        public ApplicationDbContext()
         {
         }
 
-        public ApplicationDbContext()
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
 
