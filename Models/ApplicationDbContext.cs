@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Models.DataModels;
@@ -98,6 +99,27 @@ namespace Models
                 }
             }
 
+        }
+
+        public override int SaveChanges()
+        {
+            foreach (var entry in ChangeTracker.Entries<BaseModel>().ToList())
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Entity.AddedDate = DateTime.UtcNow;
+                }
+                if(entry.State == EntityState.Modified && entry.Entity.IsDeleted == true)
+                {
+                    entry.Entity.DeletedDate = DateTime.UtcNow;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    entry.Entity.ModifiedDate = DateTime.UtcNow;
+                }
+            }
+            var result = base.SaveChanges();
+            return result;
         }
     }
 }
