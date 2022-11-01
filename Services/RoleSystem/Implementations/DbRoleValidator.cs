@@ -9,50 +9,33 @@ namespace Services.RoleSystem.Implementations
 {
     public class DbRoleValidator : IRoleValidator
     {
-        private readonly IRolesRepository RolesRepository;
-        private readonly IPermissionsRepository PermissionsRepository;
+        private readonly IRolesRepository _rolesRepository;
+        private readonly IPermissionsRepository _permissionsRepository;
+
         public DbRoleValidator(IRolesRepository RolesRepository, IPermissionsRepository PermissionsRepository)
         {
-            this.RolesRepository = RolesRepository;
-            this.PermissionsRepository = PermissionsRepository;
+            _rolesRepository = RolesRepository;
+            _permissionsRepository = PermissionsRepository;
         }
+
         public bool ValidatePermissions(ClaimsPrincipal User, string[] Permissions)
         {
-            SortedSet<string> UserPermissions = null;
-            UserPermissions = new SortedSet<string>(PermissionsRepository.GetPermissionsOfUser(User.GetId()).Select(u => u.Name));
-            foreach (string Permission in Permissions)
-            {
-                if (!UserPermissions.Contains(Permission))
-                {
-                    return false;
-                }
-            }
-            return true;
+            var userPermissions =
+                new SortedSet<string>(_permissionsRepository.GetPermissionsOfUser(User.GetId()).Select(u => u.Name));
+            return Permissions.All(Permission => userPermissions.Contains(Permission));
         }
+
         public bool ValidateOnePermission(ClaimsPrincipal User, string[] Permissions)
         {
-            SortedSet<string> UserPermissions = new SortedSet<string>(User.GetPermissions());
-            foreach(string Permission in Permissions)
-            {
-                if(UserPermissions.Contains(Permission))
-                {
-                    return true;
-                }
-            }
-            return false;
+            var userPermissions =
+                new SortedSet<string>(_permissionsRepository.GetPermissionsOfUser(User.GetId()).Select(u => u.Name));
+            return Permissions.Any(Permission => userPermissions.Contains(Permission));
         }
+
         public bool ValidateRoles(ClaimsPrincipal User, string[] Roles)
         {
-            SortedSet<string> UserRoles = null;
-            UserRoles = new SortedSet<string>(RolesRepository.GetRolesOfUser(User.GetId()).Select(u => u.Name));
-            foreach (string Role in Roles)
-            {
-                if (!UserRoles.Contains(Role))
-                {
-                    return false;
-                }
-            }
-            return true;
+            var userRoles = new SortedSet<string>(_rolesRepository.GetRolesOfUser(User.GetId()).Select(u => u.Name));
+            return Roles.All(Role => userRoles.Contains(Role));
         }
     }
 }
