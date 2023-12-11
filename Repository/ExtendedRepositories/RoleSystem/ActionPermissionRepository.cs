@@ -20,10 +20,9 @@ public interface IActionPermissionRepository : IRepository<ActionPermission>
 
 public class ActionPermissionRepository(
     ApplicationDbContext db,
-    ILogger<ActionPermissionRepository> logger,
     IPermissionsRepository PermissionsRepository,
     IActionRolesRepository ActionRoles)
-    : Repository<ActionPermission>(db, logger), IActionPermissionRepository
+    : Repository<ActionPermission>(db), IActionPermissionRepository
 {
     public Task AssignPermissionToAction(string ActionName, string PermissionName)
     {

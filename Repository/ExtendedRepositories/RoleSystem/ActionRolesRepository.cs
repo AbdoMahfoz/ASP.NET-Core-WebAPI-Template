@@ -19,9 +19,8 @@ public interface IActionRolesRepository : IRepository<ActionRole>
 
 public class ActionRolesRepository(
     ApplicationDbContext db,
-    ILogger<ActionRolesRepository> logger,
     IRolesRepository RolesRepository)
-    : Repository<ActionRole>(db, logger), IActionRolesRepository
+    : Repository<ActionRole>(db), IActionRolesRepository
 {
     public Task AssignRoleToAction(string ActionName, string RoleName)
     {

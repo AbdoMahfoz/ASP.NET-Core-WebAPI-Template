@@ -31,11 +31,10 @@ public interface IPermissionsRepository : IRepository<Permission>
 
 public class PermissionsRepository(
     ApplicationDbContext db,
-    ILogger<PermissionsRepository> logger,
     IRepository<RolePermission> RolePermissionRepository,
     IRolesRepository RolesRepository,
     IRepository<UserRole> UserRoleRepository)
-    : Repository<Permission>(db, logger), IPermissionsRepository
+    : Repository<Permission>(db), IPermissionsRepository
 {
     public void AssignPermissionToRole(string Permission, string Role)
     {

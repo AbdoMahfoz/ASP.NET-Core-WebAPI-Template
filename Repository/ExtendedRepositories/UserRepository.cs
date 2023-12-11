@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.Logging;
 using Models;
 using Models.DataModels;
 
@@ -13,8 +12,8 @@ public interface IUserRepository : IRepository<User>
     bool CheckUserExists(int UserId);
 }
 
-public class UserRepository(ApplicationDbContext context, ILogger<UserRepository> logger)
-    : Repository<User>(context, logger), IUserRepository
+public class UserRepository(ApplicationDbContext context)
+    : Repository<User>(context), IUserRepository
 {
     public User GetUser(string username)
     {
