@@ -1,7 +1,6 @@
-﻿namespace Services.Helpers.MailService
+﻿namespace Services.Helpers.MailService;
+
+public interface IMailService
 {
-    public interface IMailService
-    {
-        void SendEmail(string toEmail, string message, string fromTitle = "", string Subject = "");
-    }
+    void SendEmail(string toEmail, string message, string fromTitle = "", string Subject = "");
 }

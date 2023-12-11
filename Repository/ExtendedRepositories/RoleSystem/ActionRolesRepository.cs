@@ -3,58 +3,50 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Models;
-using Models.DataModels;
+using Models.DataModels.RoleSystem;
 
-namespace Repository.ExtendedRepositories
+namespace Repository.ExtendedRepositories.RoleSystem;
+
+public class RoleAlreadyAssignedException : Exception;
+
+public interface IActionRolesRepository : IRepository<ActionRole>
 {
-    public class RoleAlreadyAssignedException : Exception { }
-    public interface IActionRolesRepository : ICachedRepository<ActionRole>
+    Task AssignRoleToAction(string ActionName, string RoleName);
+    Task AssignRoleToAction(string ActionName, int RoleId);
+    void RemoveRoleFromAction(string ActionName, string RoleName);
+    IQueryable<Role> GetRolesOfAction(string ActionName);
+}
+
+public class ActionRolesRepository(
+    ApplicationDbContext db,
+    ILogger<ActionRolesRepository> logger,
+    IRolesRepository RolesRepository)
+    : Repository<ActionRole>(db, logger), IActionRolesRepository
+{
+    public Task AssignRoleToAction(string ActionName, string RoleName)
     {
-        Task AssignRoleToAction(string ActionName, string RoleName);
-        Task AssignRoleToAction(string ActionName, int RoleId);
-        void RemoveRoleFromAction(string ActionName, string RoleName);
-        IQueryable<Role> GetRolesOfAction(string ActionName);
+        return AssignRoleToAction(ActionName, RolesRepository.GetRole(RoleName).Id);
     }
 
-    public class ActionRolesRepository : CachedRepository<ActionRole>, IActionRolesRepository
+    public Task AssignRoleToAction(string ActionName, int RoleId)
     {
-        private readonly IRolesRepository RolesRepository;
-
-        public ActionRolesRepository(ILogger<ActionRolesRepository> logger, IRolesRepository RolesRepository) : base(logger)
+        var roleExists = GetAll().Any(role => role.ActionName == ActionName && role.Id == RoleId);
+        if (roleExists) throw new RoleAlreadyAssignedException();
+        return Insert(new ActionRole
         {
-            this.RolesRepository = RolesRepository;
-        }
+            ActionName = ActionName,
+            RoleId = RoleId
+        });
+    }
 
-        public Task AssignRoleToAction(string ActionName, string RoleName)
-        {
-            return AssignRoleToAction(ActionName, RolesRepository.GetRole(RoleName).Id);
-        }
+    public void RemoveRoleFromAction(string actionName, string RoleName)
+    {
+        var permissionOfAction = GetAll().FirstOrDefault(x => x.ActionName == actionName && x.Role.Name == RoleName);
+        SoftDelete(permissionOfAction).Wait();
+    }
 
-        public Task AssignRoleToAction(string ActionName, int RoleId)
-        {
-            bool roleExists = (from role in GetAll()
-                               where role.ActionName == ActionName && role.Id == RoleId
-                               select role).Any();
-            if (roleExists) throw new RoleAlreadyAssignedException();
-            return Insert(new ActionRole
-            {
-                ActionName = ActionName,
-                RoleId = RoleId
-            });
-        }
-
-        public void RemoveRoleFromAction(string actionName, string RoleName)
-        {
-            var permissionOfAction = GetAll().Where(x =>
-                x.ActionName == actionName && x.Role.Name == RoleName).FirstOrDefault();
-            SoftDelete(permissionOfAction);
-        }
-
-        public IQueryable<Role> GetRolesOfAction(string ActionName)
-        {
-            return from actionRole in GetAll()
-                where actionRole.ActionName == ActionName
-                select actionRole.Role;
-        }
+    public IQueryable<Role> GetRolesOfAction(string ActionName)
+    {
+        return GetAll().Where(actionRole => actionRole.ActionName == ActionName).Select(actionRole => actionRole.Role);
     }
 }

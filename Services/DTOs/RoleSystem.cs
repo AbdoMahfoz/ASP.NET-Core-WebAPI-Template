@@ -1,12 +1,10 @@
-﻿using System;
-namespace Services.DTOs
+﻿namespace Services.DTOs;
+
+public class RoleDto : BaseDto
 {
-    public class RoleDTO : BaseDTO
-    {
-        public string Name { get; set; }
-    }
-    public class PermissionDTO : BaseDTO
-    {
-        public string Name { get; set; }
-    }
+    public string Name { get; set; }
+}
+public class PermissionDto : BaseDto
+{
+    public string Name { get; set; }
 }

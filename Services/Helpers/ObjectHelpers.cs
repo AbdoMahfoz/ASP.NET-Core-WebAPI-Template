@@ -7,12 +7,12 @@ using System.Reflection;
 using Models.DataModels;
 using Services.DTOs;
 
-namespace Services.Helpers
+namespace Services.Helpers;
+
+public static class ObjectHelpers
 {
-    public static class ObjectHelpers
+    public static bool HasNullOrEmptyStrings<T>(T obj)
     {
-        public static bool HasNullOrEmptyStrings<T>(T obj)
-        {
             if (obj == null) return true;
             return (from propertyInfo in typeof(T).GetProperties()
                 where propertyInfo.CanRead
@@ -22,13 +22,13 @@ namespace Services.Helpers
                 select string.IsNullOrWhiteSpace(val)).FirstOrDefault();
         }
 
-        public static T MapTo<T>(object obj) where T : new()
-        {
+    public static T MapTo<T>(object obj) where T : new()
+    {
             return (T)MapTo(typeof(T), obj);
         }
 
-        public static object MapTo(Type T, object obj)
-        {
+    public static object MapTo(Type T, object obj)
+    {
             if (obj == null) return null;
             var res = Activator.CreateInstance(T);
             var outProps = new Dictionary<string, PropertyInfo>();
@@ -126,8 +126,8 @@ namespace Services.Helpers
             return res;
         }
 
-        public static IEnumerable<EnumResult> GetEnumOptions(string EnumName)
-        {
+    public static IEnumerable<EnumResult> GetEnumOptions(string EnumName)
+    {
             var res = new List<EnumResult>();
             var t = (from type in Assembly.GetAssembly(typeof(BaseModel))?.GetTypes()
                 where type.IsEnum && type.Name == EnumName
@@ -141,5 +141,4 @@ namespace Services.Helpers
                 });
             return res;
         }
-    }
 }

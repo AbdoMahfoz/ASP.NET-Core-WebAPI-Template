@@ -1,9 +1,8 @@
 ﻿using Services.DTOs;
 
-namespace BusinessLogic.Interfaces
+namespace BusinessLogic.Interfaces;
+
+public interface IAccountLogic
 {
-    public interface IAccountLogic
-    {
-        bool Register(UserAuthenticationRequest request, string Role);
-    }
+    bool Register(UserAuthenticationRequest request, string Role);
 }

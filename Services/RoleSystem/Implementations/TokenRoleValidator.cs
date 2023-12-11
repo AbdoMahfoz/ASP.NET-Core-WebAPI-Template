@@ -3,45 +3,44 @@ using System.Security.Claims;
 using Services.Extensions;
 using Services.RoleSystem.Interfaces;
 
-namespace Services.RoleSystem.Implementations
+namespace Services.RoleSystem.Implementations;
+
+public class TokenRoleValidator : IRoleValidator
 {
-    public class TokenRoleValidator : IRoleValidator
+    public bool ValidatePermissions(ClaimsPrincipal User, string[] Permissions)
     {
-        public bool ValidatePermissions(ClaimsPrincipal User, string[] Permissions)
-        {
-            SortedSet<string> UserPermissions = new SortedSet<string>(User.GetPermissions());
-            foreach(string Permission in Permissions)
+            var userPermissions = new SortedSet<string>(User.GetPermissions());
+            foreach(var permission in Permissions)
             {
-                if(!UserPermissions.Contains(Permission))
+                if(!userPermissions.Contains(permission))
                 {
                     return false;
                 }
             }
             return true;
         }
-        public bool ValidateOnePermission(ClaimsPrincipal User, string[] Permissions)
-        {
-            SortedSet<string> UserPermissions = new SortedSet<string>(User.GetPermissions());
-            foreach(string Permission in Permissions)
+    public bool ValidateOnePermission(ClaimsPrincipal User, string[] Permissions)
+    {
+            var userPermissions = new SortedSet<string>(User.GetPermissions());
+            foreach(var permission in Permissions)
             {
-                if(UserPermissions.Contains(Permission))
+                if(userPermissions.Contains(permission))
                 {
                     return true;
                 }
             }
             return false;
         }
-        public bool ValidateRoles(ClaimsPrincipal User, string[] Roles)
-        {
-            SortedSet<string> UserRoles = new SortedSet<string>(User.GetRoles());
-            foreach (string Role in Roles)
+    public bool ValidateRoles(ClaimsPrincipal User, string[] Roles)
+    {
+            var userRoles = new SortedSet<string>(User.GetRoles());
+            foreach (var role in Roles)
             {
-                if (!UserRoles.Contains(Role))
+                if (!userRoles.Contains(role))
                 {
                     return false;
                 }
             }
             return true;
         }
-    }
 }

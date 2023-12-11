@@ -4,20 +4,13 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using Models.Helpers;
 
-namespace Services.Helpers.MailService
+namespace Services.Helpers.MailService;
+
+public class SmtpMailService(IOptions<AppSettings> json) : IMailService
 {
-    public class SmtpMailService : IMailService
+    public void SendEmail(string toEmail, string message, string fromTitle = "", string Subject = "")
     {
-        private readonly IOptions<AppSettings> json;
-
-        public SmtpMailService(IOptions<AppSettings> json)
-        {
-            this.json = json;
-        }
-
-        public void SendEmail(string toEmail, string message, string fromTitle = "", string Subject = "")
-        {
-            var options = json.Value.SMTP;
+            var options = json.Value.Smtp;
             toEmail = toEmail.ToLower();
             var email = new MimeMessage();
             var from = new MailboxAddress(fromTitle, options.Email);
@@ -36,7 +29,7 @@ namespace Services.Helpers.MailService
             var client = new SmtpClient();
             try
             {
-                client.Connect(options.Host, options.Port, options.UseSSL);
+                client.Connect(options.Host, options.Port, options.UseSsl);
                 client.Authenticate(options.Email, options.Password);
                 client.Send(email);
                 client.Disconnect(true);
@@ -51,5 +44,4 @@ namespace Services.Helpers.MailService
                 client.Dispose();
             }
         }
-    }
 }

@@ -6,12 +6,12 @@ namespace BusinessLogic.Implementations;
 
 public class Rfc2898PasswordManager : IPasswordManager
 {
-    public bool ComparePassword(string Vanilla, string Hashed)
+    public bool ComparePassword(string vanilla, string hashed)
     {
-        var hashBytes = Convert.FromBase64String(Hashed);
+        var hashBytes = Convert.FromBase64String(hashed);
         var salt = new byte[16];
         Array.Copy(hashBytes, 0, salt, 0, 16);
-        var pbkdf2 = new Rfc2898DeriveBytes(Vanilla, salt, 10000);
+        var pbkdf2 = new Rfc2898DeriveBytes(vanilla, salt, 10000, HashAlgorithmName.SHA1);
         var hash = pbkdf2.GetBytes(20);
         for (var i = 0; i < 20; i++)
         {
@@ -22,11 +22,11 @@ public class Rfc2898PasswordManager : IPasswordManager
         }
         return true;
     }
-    public string HashPassword(string Password)
+    public string HashPassword(string password)
     {
-        var salt = new byte[16];
-        RandomNumberGenerator.Create().GetBytes(salt);
-        var derivedBytes = new Rfc2898DeriveBytes(Password, salt, 10000);
+        byte[] salt;
+        RandomNumberGenerator.Create().GetBytes(salt = new byte[16]);
+        var derivedBytes = new Rfc2898DeriveBytes(password, salt, 10000, HashAlgorithmName.SHA1);
         var hash = derivedBytes.GetBytes(20);
         var hashBytes = new byte[36];
         Array.Copy(salt, 0, hashBytes, 0, 16);

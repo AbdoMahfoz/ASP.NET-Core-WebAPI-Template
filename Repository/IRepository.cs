@@ -3,20 +3,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using Models.DataModels;
 
-namespace Repository
+namespace Repository;
+
+public interface IRepository<T> where T : BaseModel
 {
-    public interface IRepository<T> where T : BaseModel
-    {
-        IQueryable<T> GetAll();
-        T Get(int id);
-        Task Insert(T entity);
-        Task InsertRange(IEnumerable<T> entities);
-        void Update(T entity);
-        void UpdateRange(IEnumerable<T> entities);
-        void SoftDelete(T entity);
-        void SoftDeleteRange(IEnumerable<T> entities);
-        void HardDelete(T entity);
-        void HardDeleteRange(IEnumerable<T> entities);
-        void SaveChanges();
-    }
+    IQueryable<T> GetAll();
+    Task<T> Get(int id);
+    Task Insert(T entity);
+    Task InsertRange(IEnumerable<T> entities);
+    Task Update(T entity);
+    Task UpdateRange(IEnumerable<T> entities);
+    Task SoftDelete(T entity);
+    Task SoftDeleteRange(IEnumerable<T> entities);
+    Task HardDelete(T entity);
+    Task HardDeleteRange(IEnumerable<T> entities);
+    Task SaveChanges();
 }

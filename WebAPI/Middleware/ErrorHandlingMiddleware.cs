@@ -7,24 +7,15 @@ using System;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace WebAPI.Middleware
+namespace WebAPI.Middleware;
+
+public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
 {
-    public class ErrorHandlingMiddleware
+    public async Task Invoke(HttpContext context)
     {
-        private readonly ILogger<ErrorHandlingMiddleware> _logger;
-        private readonly RequestDelegate _next;
-
-        public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
-        {
-            _next = next;
-            _logger = logger;
-        }
-
-        public async Task Invoke(HttpContext context)
-        {
             try
             {
-                await _next(context);
+                await next(context);
             }
             catch (Exception ex)
             {
@@ -32,9 +23,9 @@ namespace WebAPI.Middleware
             }
         }
 
-        private Task HandleExceptionAsync(HttpContext context, Exception ex)
-        {
-            _logger.LogError(ex, ex.Message);
+    private Task HandleExceptionAsync(HttpContext context, Exception ex)
+    {
+            logger.LogError(ex, ex.Message);
             var code = HttpStatusCode.InternalServerError; // 500 if unexpected
 
             // if (ex is NullReferenceException) ex.Message = "On"
@@ -44,5 +35,4 @@ namespace WebAPI.Middleware
             context.Response.StatusCode = (int) code;
             return context.Response.WriteAsync(result);
         }
-    }
 }

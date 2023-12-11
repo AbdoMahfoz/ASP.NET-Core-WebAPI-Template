@@ -1,11 +1,10 @@
 ﻿using Models.GenericControllerDTOs;
 using Models.Helpers;
 
-namespace Models.DataModels.SimpleModels
+namespace Models.DataModels.SimpleModels;
+
+[ExposeToApi(typeof(DemoRequestDto), typeof(DemoResponseDto))]
+public class DemoModel : BaseModel
 {
-    [ExposeToApi(typeof(DemoRequestDTO), typeof(DemoResponseDTO))]
-    public class DemoModel : BaseModel
-    {
-        public string Name { get; set; }
-    }
+    public string Name { get; set; }
 }

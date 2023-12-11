@@ -6,38 +6,34 @@ using Microsoft.Extensions.DependencyInjection;
 using Models;
 using Services.RoleSystem.Interfaces;
 
-namespace Services.RoleSystem
-{
-    public abstract class BaseRoleValidator : ActionFilterAttribute
-    {
-        protected string[] Roles;
-        protected IRoleValidator RoleValidator;
+namespace Services.RoleSystem;
 
-        protected BaseRoleValidator(string[] roles)
-        {
+public abstract class BaseRoleValidator : ActionFilterAttribute
+{
+    protected string[] Roles;
+    protected IRoleValidator RoleValidator;
+
+    protected BaseRoleValidator(string[] roles)
+    {
             Roles = roles;
         }
 
-        protected BaseRoleValidator()
-        {
+    protected BaseRoleValidator()
+    {
         }
 
-        protected void InitializeServices(ActionExecutingContext context)
-        {
+    protected void InitializeServices(ActionExecutingContext context)
+    {
             var scope = context.HttpContext.RequestServices.CreateScope();
             RoleValidator = (IRoleValidator)scope.ServiceProvider.GetService(typeof(IRoleValidator));
         }
-    }
+}
 
-    public class HasRole : BaseRoleValidator
+public class HasRole(params RoleNames[] roles) : BaseRoleValidator(roles.Select(u => u.ToString())
+    .ToArray())
+{
+    public override void OnActionExecuting(ActionExecutingContext context)
     {
-        public HasRole(params RoleNames[] roles) : base(roles.Select(u => u.ToString())
-            .ToArray())
-        {
-        }
-
-        public override void OnActionExecuting(ActionExecutingContext context)
-        {
             InitializeServices(context);
             if (!RoleValidator.ValidateRoles(context.HttpContext.User, Roles))
             {
@@ -47,17 +43,14 @@ namespace Services.RoleSystem
                 };
             }
         }
-    }
+}
 
-    public class HasPermission : BaseRoleValidator
+public class HasPermission(params PermissionNames[] permissions) : BaseRoleValidator(permissions
+    .Select(u => u.ToString())
+    .ToArray())
+{
+    public override void OnActionExecuting(ActionExecutingContext context)
     {
-        public HasPermission(params PermissionNames[] permissions) : base(permissions.Select(u => u.ToString())
-            .ToArray())
-        {
-        }
-
-        public override void OnActionExecuting(ActionExecutingContext context)
-        {
             InitializeServices(context);
             if (!RoleValidator.ValidateOnePermission(context.HttpContext.User, Roles))
             {
@@ -67,17 +60,14 @@ namespace Services.RoleSystem
                 };
             }
         }
-    }
+}
 
-    public class HasOnePermission : BaseRoleValidator
+public class HasOnePermission(params PermissionNames[] permissions) : BaseRoleValidator(permissions
+    .Select(u => u.ToString())
+    .ToArray())
+{
+    public override void OnActionExecuting(ActionExecutingContext context)
     {
-        public HasOnePermission(params PermissionNames[] permissions) : base(permissions.Select(u => u.ToString())
-            .ToArray())
-        {
-        }
-
-        public override void OnActionExecuting(ActionExecutingContext context)
-        {
             InitializeServices(context);
             if (!RoleValidator.ValidatePermissions(context.HttpContext.User, Roles))
             {
@@ -87,35 +77,26 @@ namespace Services.RoleSystem
                 };
             }
         }
-    }
+}
 
 
-    public enum CrudVerb
+public enum CrudVerb
+{
+    Create,
+    Read,
+    Update,
+    Delete
+}
+
+public class HasCrudPermission(CrudVerb crudVerb, Type type = null) : BaseRoleValidator
+{
+    public override void OnActionExecuting(ActionExecutingContext context)
     {
-        Create,
-        Read,
-        Update,
-        Delete
-    }
-
-    public class HasCrudPermission : BaseRoleValidator
-    {
-        private readonly CrudVerb _crudVerb;
-        private readonly Type _type;
-
-        public HasCrudPermission(CrudVerb crudVerb, Type type = null)
-        {
-            _crudVerb = crudVerb;
-            _type = type;
-        }
-
-        public override void OnActionExecuting(ActionExecutingContext context)
-        {
             InitializeServices(context);
             lock (this)
             {
-                var modelName = _type == null ? context.Controller.GetType().GenericTypeArguments[0].Name : _type.Name;
-                Roles = new[] { $"{_crudVerb} {modelName}", $"{_crudVerb} *" };
+                var modelName = type == null ? context.Controller.GetType().GenericTypeArguments[0].Name : type.Name;
+                Roles = new[] { $"{crudVerb} {modelName}", $"{crudVerb} *" };
                 if (!RoleValidator.ValidateOnePermission(context.HttpContext.User, Roles))
                 {
                     context.Result = new ObjectResult(new { require = "one", missingPermissions = Roles })
@@ -125,5 +106,4 @@ namespace Services.RoleSystem
                 }
             }
         }
-    }
 }

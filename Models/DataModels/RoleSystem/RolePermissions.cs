@@ -1,10 +1,9 @@
-﻿namespace Models.DataModels
+﻿namespace Models.DataModels.RoleSystem;
+
+public class RolePermission : BaseModel
 {
-    public class RolePermission : BaseModel
-    {
-        public int RoleId { get; set; }
-        public virtual Role Role { get; set; }
-        public int PermissionId { get; set; }
-        public virtual Permission Permission { get; set; }
-    }
+    public int RoleId { get; set; }
+    public virtual Role Role { get; set; }
+    public int PermissionId { get; set; }
+    public virtual Permission Permission { get; set; }
 }

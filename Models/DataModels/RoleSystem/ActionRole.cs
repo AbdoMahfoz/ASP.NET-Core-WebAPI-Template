@@ -1,9 +1,8 @@
-﻿namespace Models.DataModels
+﻿namespace Models.DataModels.RoleSystem;
+
+public class ActionRole : BaseModel
 {
-    public class ActionRole : BaseModel
-    {
-        public string ActionName { get; set; }
-        public int RoleId { get; set; }
-        public virtual Role Role { get; set; }
-    }
+    public string ActionName { get; set; }
+    public int RoleId { get; set; }
+    public virtual Role Role { get; set; }
 }

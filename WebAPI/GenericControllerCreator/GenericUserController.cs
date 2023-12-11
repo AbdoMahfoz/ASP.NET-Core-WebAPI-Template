@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Models.DataModels;
 using Models.GenericControllerDTOs;
-using Services.RoleSystem;
+using Services.Extensions;
 
 namespace WebAPI.GenericControllerCreator;
 
@@ -15,8 +15,8 @@ namespace WebAPI.GenericControllerCreator;
 [ApiController]
 [GenericControllerName]
 [Authorize]
-public class GenericController<T, TDIn, TDOut>(IGenericLogic<T, TDIn, TDOut> logic) : ControllerBase
-    where T : BaseModel, new()
+public class GenericUserController<T, TDIn, TDOut>(IUserGenericLogic<T, TDIn, TDOut> logic) : ControllerBase
+    where T : BaseUserModel, new()
     where TDOut : BaseDto, new()
 {
     public static string ModelName = "";
@@ -30,10 +30,11 @@ public class GenericController<T, TDIn, TDOut>(IGenericLogic<T, TDIn, TDOut> log
     ///     That it's ids is known beforehand.
     /// </remarks>
     [HttpPost("GetAll")]
-    [HasCrudPermission(CrudVerb.Read)]
-    public IEnumerable<TDOut> GetAll([FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] IDictionary<string, object> relationalIds = null)
+    public IEnumerable<TDOut> GetAll(
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)]
+        IDictionary<string, object> relationalIds = null)
     {
-        var res = logic.GetAll(relationalIds);
+        var res = logic.GetAll(User.GetId(), relationalIds);
         if (res == null) throw new BadHttpRequestException("relationalIds malformed");
         return res;
     }
@@ -44,10 +45,9 @@ public class GenericController<T, TDIn, TDOut>(IGenericLogic<T, TDIn, TDOut> log
     /// <param name="id">Instance Id</param>
     /// <response code="200">The Instance with the Id</response>
     [HttpGet("{id}")]
-    [HasCrudPermission(CrudVerb.Read)]
     public TDOut Get(int id)
     {
-        return logic.Get(id);
+        return logic.Get(User.GetId(), id);
     }
 
 
@@ -63,11 +63,10 @@ public class GenericController<T, TDIn, TDOut>(IGenericLogic<T, TDIn, TDOut> log
     [ProducesResponseType(201, Type = typeof(int))]
     [ProducesResponseType(400, Type = typeof(string))]
     [HttpPost("Insert")]
-    [HasCrudPermission(CrudVerb.Create)]
-    public IActionResult Insert([FromBody]TDIn instance)
+    public IActionResult Insert([FromBody] TDIn instance)
     {
         if (instance == null) return BadRequest("The inserted instance is null");
-        var returnedId = logic.Insert(instance);
+        var returnedId = logic.Insert(User.GetId(), instance);
         return StatusCode(StatusCodes.Status201Created, returnedId);
     }
 
@@ -82,10 +81,9 @@ public class GenericController<T, TDIn, TDOut>(IGenericLogic<T, TDIn, TDOut> log
     /// <response code="201">Entities Inserted</response>
     [ProducesResponseType(201, Type = typeof(IEnumerable<int>))]
     [HttpPost("InsertRange")]
-    [HasCrudPermission(CrudVerb.Create)]
     public IActionResult InsertRange([FromBody] IEnumerable<TDIn> instances)
     {
-        return StatusCode(StatusCodes.Status201Created, logic.InsertRange(instances));
+        return StatusCode(StatusCodes.Status201Created, logic.InsertRange(User.GetId(), instances));
     }
 
     /// <summary>
@@ -97,11 +95,10 @@ public class GenericController<T, TDIn, TDOut>(IGenericLogic<T, TDIn, TDOut> log
     /// <response code="202">Instance updated</response>
     [ProducesResponseType(202, Type = null)]
     [HttpPut("Update")]
-    [HasCrudPermission(CrudVerb.Update)]
     public IActionResult Update([FromQuery] int Id, [FromBody] TDIn instance)
     {
         if (instance == null) return BadRequest();
-        logic.Update(Id, instance);
+        logic.Update(User.GetId(), Id, instance);
         return StatusCode(StatusCodes.Status202Accepted);
     }
 
@@ -114,11 +111,10 @@ public class GenericController<T, TDIn, TDOut>(IGenericLogic<T, TDIn, TDOut> log
     /// <response code="202">instance Deleted</response>
     [ProducesResponseType(202, Type = null)]
     [HttpDelete("Delete")]
-    [HasCrudPermission(CrudVerb.Delete)]
     public IActionResult Delete(int Id, bool IsHard)
     {
-        if (IsHard) logic.HardDelete(Id);
-        else logic.SoftDelete(Id);
+        if (IsHard) logic.HardDelete(User.GetId(), Id);
+        else logic.SoftDelete(User.GetId(), Id);
         return StatusCode(StatusCodes.Status202Accepted);
     }
 
@@ -129,11 +125,10 @@ public class GenericController<T, TDIn, TDOut>(IGenericLogic<T, TDIn, TDOut> log
     /// <response code="202">instances Deleted</response>
     [ProducesResponseType(202, Type = null)]
     [HttpDelete("DeleteRange")]
-    [HasCrudPermission(CrudVerb.Delete)]
     public IActionResult DeleteEnablers([FromBody] IEnumerable<int> ids)
     {
         if (ids == null) return BadRequest();
-        logic.SoftDeleteRange(ids);
+        logic.SoftDeleteRange(User.GetId(), ids);
         return StatusCode(StatusCodes.Status202Accepted);
     }
 }

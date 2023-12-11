@@ -5,12 +5,12 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Models.Helpers;
 
-namespace WebAPI.GenericControllerCreator
+namespace WebAPI.GenericControllerCreator;
+
+public class GenericControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
 {
-    public class GenericControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
+    public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
     {
-        public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
-        {
             foreach (var entityType in IncludedEntities.Types)
             {
                 var typeName = entityType.Item1.Name + "Controller";
@@ -24,5 +24,4 @@ namespace WebAPI.GenericControllerCreator
                 }
             }
         }
-    }
 }

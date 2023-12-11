@@ -4,38 +4,30 @@ using System.Linq;
 using Models.DataModels;
 using BusinessLogic.Interfaces;
 using Models;
+using Models.DataModels.RoleSystem;
 using Models.Helpers;
+using Repository.ExtendedRepositories.RoleSystem;
 using Services.DTOs;
 using Services.RoleSystem;
 
 namespace BusinessLogic.Initializers;
 
 // ReSharper disable once UnusedType.Global
-public class RoleInitializer : BaseInitializer
+public class RoleInitializer(
+    IRolesRepository roleRepository,
+    IPermissionsRepository permissionsRepository,
+    IAccountLogic accountLogic,
+    IUserRepository userRepository)
+    : BaseInitializer
 {
-    private readonly IRolesRepository _roleRepository;
-    private readonly IPermissionsRepository _permissionsRepository;
-    private readonly IAccountLogic _accountLogic;
-    private readonly IUserRepository _userRepository;
-
-    private readonly List<(RoleNames, List<PermissionNames>)> _rolesPermissions = new()
-    {
+    private readonly List<(RoleNames, List<PermissionNames>)> _rolesPermissions =
+    [
         (RoleNames.Admin,
-            new List<PermissionNames>
-            {
-                PermissionNames.CreateAccount, PermissionNames.GenerateReports,
-                PermissionNames.ManageRoles, PermissionNames.ViewAnalytics
-            })
-    };
-
-    public RoleInitializer(IRolesRepository roleRepository, IPermissionsRepository permissionsRepository,
-        IAccountLogic accountLogic, IUserRepository userRepository)
-    {
-        _roleRepository = roleRepository;
-        _permissionsRepository = permissionsRepository;
-        _accountLogic = accountLogic;
-        _userRepository = userRepository;
-    }
+        [
+            PermissionNames.CreateAccount, PermissionNames.GenerateReports,
+            PermissionNames.ManageRoles, PermissionNames.ViewAnalytics
+        ])
+    ];
 
     protected override void Initialize()
     {
@@ -44,70 +36,70 @@ public class RoleInitializer : BaseInitializer
         var currentPermissions = IncludedEntities.Types
             .SelectMany(u => modelVerbs.Select(x => $"{x} {u.Item1.Name}"))
             .Concat(typeof(PermissionNames).GetEnumNames()).ToArray();
-        var existingPermissions = _permissionsRepository.GetAll().Select(u => u.Name).ToArray();
+        var existingPermissions = permissionsRepository.GetAll().Select(u => u.Name).ToArray();
         var missingPermissions = currentPermissions.Where(u => !existingPermissions.Contains(u)).ToArray();
         if (missingPermissions.Length > 0)
         {
-            _permissionsRepository.InsertRange(missingPermissions.Select(u => new Permission { Name = u }));
+            permissionsRepository.InsertRange(missingPermissions.Select(u => new Permission { Name = u })).Wait();
         }
 
-        if (!_roleRepository.GetAll().Any())
+        if (!roleRepository.GetAll().Any())
         {
             var admin = new Role { Name = RoleNames.Admin.ToString() };
-            _roleRepository.Insert(admin).Wait();
+            roleRepository.Insert(admin).Wait();
 
             var dataManager = new Role { Name = RoleNames.DataManager.ToString() };
-            _roleRepository.Insert(dataManager).Wait();
+            roleRepository.Insert(dataManager).Wait();
 
             var permissions = new[] { "Read *", "Create *", "Update *", "Delete *" };
             foreach (var permission in permissions)
             {
                 var permObj = new Permission { Name = permission };
-                _permissionsRepository.Insert(permObj).Wait();
-                _permissionsRepository.AssignPermissionToRole(permObj.Id, dataManager.Id);
-                _permissionsRepository.AssignPermissionToRole(permObj.Id, admin.Id);
+                permissionsRepository.Insert(permObj).Wait();
+                permissionsRepository.AssignPermissionToRole(permObj.Id, dataManager.Id);
+                permissionsRepository.AssignPermissionToRole(permObj.Id, admin.Id);
             }
         }
 
         var currentRoles = typeof(RoleNames).GetEnumNames();
-        var existingRoles = _roleRepository.GetAll().Select(u => u.Name).ToArray();
+        var existingRoles = roleRepository.GetAll().Select(u => u.Name).ToArray();
         var missingRoles = currentRoles.Where(u => !existingRoles.Contains(u)).ToArray();
         if (missingRoles.Length > 0)
         {
-            _roleRepository.InsertRange(missingRoles.Select(u => new Role { Name = u }));
+            roleRepository.InsertRange(missingRoles.Select(u => new Role { Name = u })).Wait();
         }
 
         foreach (var permission in missingPermissions)
         {
-            _permissionsRepository.AssignPermissionToRole(permission, RoleNames.Admin.ToString());
+            permissionsRepository.AssignPermissionToRole(permission, RoleNames.Admin.ToString());
         }
 
         foreach (var rolePermissionPair in _rolesPermissions)
         {
-            var curPermissions = _permissionsRepository.GetPermissionsOfRole(rolePermissionPair.Item1.ToString());
+            var curPermissions = permissionsRepository.GetPermissionsOfRole(rolePermissionPair.Item1.ToString());
             var desiredPermissions = rolePermissionPair.Item2.Select(u => u.ToString()).ToArray();
             var toBeAdded = desiredPermissions.Where(u => !curPermissions.Any(x => x.Name == u));
             var toBeRemoved = curPermissions.Where(u => !desiredPermissions.Contains(u.Name));
             foreach (var permission in toBeAdded)
             {
-                var p = _permissionsRepository.GetPermission(permission);
+                var p = permissionsRepository.GetPermission(permission);
                 if (p == null)
                 {
                     p = new Permission { Name = permission };
-                    _permissionsRepository.Insert(p).Wait();
+                    permissionsRepository.Insert(p).Wait();
                 }
 
-                _permissionsRepository.AssignPermissionToRole(permission, rolePermissionPair.Item1.ToString());
+                permissionsRepository.AssignPermissionToRole(permission, rolePermissionPair.Item1.ToString());
             }
 
             if (toBeRemoved.Any())
             {
-                _permissionsRepository.HardDeleteRange(toBeRemoved);
+                permissionsRepository.HardDeleteRange(toBeRemoved).Wait();
             }
         }
 
-        if (_userRepository.GetAll().Any()) return;
-        _accountLogic.Register(new UserAuthenticationRequest { Username = "Admin", Password = "123123123" },
+        if (userRepository.GetAll().Any()) return;
+        accountLogic.Register(new UserAuthenticationRequest { Username = "Admin", Password = "123123123" },
             "Admin");
     }
 }
