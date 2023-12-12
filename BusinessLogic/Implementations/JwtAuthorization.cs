@@ -24,7 +24,7 @@ public class JwtAuthorization(
     IPermissionsRepository PermissionsRepository)
     : IAuth
 {
-    private User GenerateToken(User user)
+    private (string token, int userId) GenerateToken(User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(options.Value.Secret);
@@ -50,20 +50,22 @@ public class JwtAuthorization(
                 new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
         var token = tokenHandler.CreateToken(tokenDescriptor);
-        user.Token = tokenHandler.WriteToken(token);
-        user.Password = null;
-        return user;
+        return (tokenHandler.WriteToken(token), user.Id);
     }
 
-    public User GenerateToken(int UserId)
+    public (string token, int userId) GenerateToken(int UserId)
     {
         return GenerateToken(UserRepository.Get(UserId).Result);
     }
 
-    public User Authenticate(UserAuthenticationRequest request)
+    public (string token, int userId) Authenticate(UserAuthenticationRequest request)
     {
         var user = UserRepository.GetUser(request.Username);
-        if (user == null || !PasswordManager.ComparePassword(request.Password, user.Password)) return null;
+        if (user == null || !PasswordManager.ComparePassword(request.Password, user.Password))
+        {
+            return (null, 0);
+        }
+
         if (!user.LoggedIn)
         {
             user.LoggedIn = true;
@@ -78,7 +80,7 @@ public class JwtAuthorization(
         var user = UserRepository.Get(UserId).Result;
         user.LoggedIn = false;
         user.LastLogOut = DateTime.UtcNow;
-        UserRepository.Update(user);
+        UserRepository.Update(user).Wait();
     }
 
     public bool Validate(int UserId, DateTime TokenIssuedDate)

@@ -31,20 +31,22 @@ public class AccountController(IOptions<AppSettings> options, IAuth Auth, IAccou
     [ProducesResponseType(202, Type = typeof(UserAuthenticationResult))]
     [ProducesResponseType(404, Type = null)]
     [HttpPost("Token")]
-    public IActionResult Login([FromBody]UserAuthenticationRequest request)
+    public IActionResult Login([FromBody] UserAuthenticationRequest request)
     {
         try
         {
-            var user = Auth.Authenticate(request);
-            if (user == null)
+            var res = Auth.Authenticate(request);
+            if (res.token == null)
                 return NotFound();
-            return StatusCode(StatusCodes.Status202Accepted, new UserAuthenticationResult(user.Id, user.Token, options.Value.TokenExpirationMinutes));
+            return StatusCode(StatusCodes.Status202Accepted,
+                new UserAuthenticationResult(res.userId, res.token, options.Value.TokenExpirationMinutes));
         }
-        catch(KeyNotFoundException)
+        catch (KeyNotFoundException)
         {
             return NotFound();
         }
     }
+
     /// <summary>
     /// Creates a new token with the same credientials of the exisiting one
     /// </summary>
@@ -57,9 +59,10 @@ public class AccountController(IOptions<AppSettings> options, IAuth Auth, IAccou
     [HttpPost("RefreshToken")]
     public IActionResult RefreshToken()
     {
-        var user = Auth.GenerateToken(User.GetId());
-        return Ok(new UserAuthenticationResult(user.Id, user.Token, options.Value.TokenExpirationMinutes));
+        var res = Auth.GenerateToken(User.GetId());
+        return Ok(new UserAuthenticationResult(res.userId, res.token, options.Value.TokenExpirationMinutes));
     }
+
     /// <summary>
     /// Registers the user into the database
     /// </summary>
@@ -69,12 +72,13 @@ public class AccountController(IOptions<AppSettings> options, IAuth Auth, IAccou
     [ProducesResponseType(200, Type = null)]
     [ProducesResponseType(409, Type = null)]
     [HttpPost("Register")]
-    public IActionResult Register([FromBody]UserAuthenticationRequest request)
+    public IActionResult Register([FromBody] UserAuthenticationRequest request)
     {
         if (AccountLogic.Register(request, "User"))
             return Ok();
         return StatusCode(StatusCodes.Status409Conflict);
     }
+
     /// <summary>
     /// Logs-out user from all devices
     /// </summary>

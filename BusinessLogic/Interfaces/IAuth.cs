@@ -1,3 +1,13 @@
-﻿using Models.DataModels; using Services.DTOs; using System;  namespace BusinessLogic.Interfaces;
+﻿using Models.DataModels;
+using Services.DTOs;
+using System;
 
-public interface IAuth {     User GenerateToken(int UserId);     User Authenticate(UserAuthenticationRequest request);     void Logout(int UserId);     bool Validate(int UserId, DateTime TokenIssuedDate); }
+namespace BusinessLogic.Interfaces;
+
+public interface IAuth
+{
+    (string token, int userId) GenerateToken(int UserId);
+    (string token, int userId) Authenticate(UserAuthenticationRequest request);
+    void Logout(int UserId);
+    bool Validate(int UserId, DateTime TokenIssuedDate);
+}

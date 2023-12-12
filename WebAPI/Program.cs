@@ -36,8 +36,10 @@ using WebAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
-builder.Logging.AddConfiguration(configuration.GetSection("Logging")).AddConsole().AddDebug()
-    .AddEventSourceLogger().SetMinimumLevel(LogLevel.Warning);
+builder.Logging.AddConfiguration(configuration.GetSection("Logging"))
+    .AddConsole()
+    .AddDebug()
+    .AddEventSourceLogger();
 var services = builder.Services;
 
 services.Configure<CookiePolicyOptions>(options =>

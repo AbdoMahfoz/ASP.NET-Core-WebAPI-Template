@@ -20,30 +20,31 @@ public static class IncludedEntities
 
     static IncludedEntities()
     {
-            var assembly = typeof(IncludedEntities).GetTypeInfo().Assembly;
-            var typeList = new List<(Type, Type, Type)>();
+        var assembly = typeof(IncludedEntities).GetTypeInfo().Assembly;
+        var typeList = new List<(Type, Type, Type)>();
 
-            foreach (var type in assembly.GetLoadableTypes())
+        foreach (var type in assembly.GetLoadableTypes())
+        {
+            var attribs = type.GetCustomAttributes(typeof(ExposeToApi), true);
+            if (attribs.Length > 0)
             {
-                var attribs = type.GetCustomAttributes(typeof(ExposeToApi), true);
-                if (attribs.Length > 0)
-                {
-                    var o = (ExposeToApi) attribs[0];
-                    typeList.Add((type, o.DtoIn, o.DtoOut));
-                }
+                var o = (ExposeToApi)attribs[0];
+                typeList.Add((type, o.DtoIn, o.DtoOut));
             }
-
-            Types = typeList;
         }
+
+        Types = typeList;
+    }
+
     public static IEnumerable<Type> GetLoadableTypes(this Assembly assembly)
     {
-            try
-            {
-                return assembly.GetTypes();
-            }
-            catch (ReflectionTypeLoadException e)
-            {
-                return e.Types.Where(t => t != null);
-            }
+        try
+        {
+            return assembly.GetTypes();
         }
+        catch (ReflectionTypeLoadException e)
+        {
+            return e.Types.Where(t => t != null);
+        }
+    }
 }

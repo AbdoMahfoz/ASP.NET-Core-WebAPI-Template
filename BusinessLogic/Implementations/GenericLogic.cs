@@ -59,7 +59,7 @@ public class GenericLogic<T, TDIn, TDOut>(IRepository<T> genericRepository) : IG
 
     public virtual TDOut Get(int id)
     {
-        return ObjectHelpers.MapTo<TDOut>(genericRepository.Get(id));
+        return ObjectHelpers.MapTo<TDOut>(genericRepository.Get(id).Result);
     }
 
     public virtual int Insert(TDIn entity)

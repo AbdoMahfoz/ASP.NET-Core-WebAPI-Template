@@ -15,7 +15,5 @@ public class User : BaseModel
     public bool LoggedIn { get; set; } = false;
     public DateTime? LastLogOut { get; set; }
 
-    [NotMapped] public string Token { get; set; }
-
     public virtual ICollection<UserRole> UserRoles { get; set; }
 }

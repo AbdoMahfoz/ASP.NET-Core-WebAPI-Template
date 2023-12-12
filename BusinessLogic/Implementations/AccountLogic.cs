@@ -14,14 +14,14 @@ public class AccountLogic(
 {
     public bool Register(UserAuthenticationRequest request, string Role)
     {
-            if (UserRepository.CheckUsernameExists(request.Username)) return false;
-            var u = new User
-            {
-                UserName = request.Username,
-                Password = PasswordManager.HashPassword(request.Password)
-            };
-            UserRepository.Insert(u).Wait();
-            RolesRepository.AssignRoleToUser(Role, u.Id);
-            return true;
-        }
+        if (UserRepository.CheckUsernameExists(request.Username)) return false;
+        var u = new User
+        {
+            UserName = request.Username,
+            Password = PasswordManager.HashPassword(request.Password)
+        };
+        UserRepository.Insert(u).Wait();
+        RolesRepository.AssignRoleToUser(Role, u.Id);
+        return true;
+    }
 }
