@@ -47,28 +47,28 @@ public class Repository<T>(ApplicationDbContext context)
     {
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
         await _entities.AddAsync(entity);
-        await SaveChanges();
+        await SaveChangesHelper();
     }
 
     public virtual async Task InsertRange(IEnumerable<T> Entities)
     {
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
         await _entities.AddRangeAsync(Entities);
-        await SaveChanges();
+        await SaveChangesHelper();
     }
 
     public virtual async Task Update(T entity)
     {
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
         _entities.Update(entity);
-        await SaveChanges();
+        await SaveChangesHelper();
     }
 
     public virtual async Task UpdateRange(IEnumerable<T> Entities)
     {
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
         _entities.UpdateRange(Entities.ToArray());
-        await SaveChanges();
+        await SaveChangesHelper();
     }
 
     public virtual async Task SoftDelete(T entity)
@@ -76,7 +76,7 @@ public class Repository<T>(ApplicationDbContext context)
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
         entity.IsDeleted = true;
         _entities.Update(entity);
-        await SaveChanges();
+        await SaveChangesHelper();
     }
 
     public virtual async Task SoftDeleteRange(IEnumerable<T> Entities)
@@ -88,25 +88,31 @@ public class Repository<T>(ApplicationDbContext context)
             _entities.Update(item);
         }
 
-        await SaveChanges();
+        await SaveChangesHelper();
     }
 
     public virtual async Task HardDelete(T entity)
     {
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
         _entities.Remove(entity);
-        await SaveChanges();
+        await SaveChangesHelper();
     }
 
     public virtual async Task HardDeleteRange(IEnumerable<T> Entities)
     {
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
         _entities.RemoveRange(Entities);
-        await SaveChanges();
+        await SaveChangesHelper();
     }
 
-    public Task SaveChanges()
+    private Task SaveChangesHelper()
     {
         return context.SaveChangesAsync();
+    }
+
+    public async Task SaveChanges()
+    {
+        using var _ = await ManipulationWait.Wait(_manipulationQueue);
+        await SaveChangesHelper();
     }
 }
