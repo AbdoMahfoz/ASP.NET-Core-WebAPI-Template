@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Models;
 using Models.DataModels;
+using Repository.Tenant.Interfaces;
 
 namespace Repository.ExtendedRepositories;
 
@@ -12,8 +12,8 @@ public interface IUserRepository : IRepository<User>
     bool CheckUserExists(int UserId);
 }
 
-public class UserRepository(ApplicationDbContext context)
-    : Repository<User>(context), IUserRepository
+public class UserRepository(ITenantManager tenantManager)
+    : Repository<User>(tenantManager), IUserRepository
 {
     public User GetUser(string username)
     {

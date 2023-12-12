@@ -6,14 +6,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Repository.Tenant.Interfaces;
 
 namespace Repository;
 
-public class Repository<T>(ApplicationDbContext context)
+public class Repository<T>(ITenantManager tenantManager)
     : IRepository<T>
     where T : BaseModel
 {
-    private readonly DbSet<T> _entities = context.Set<T>();
+    private ApplicationDbContext Context => tenantManager.GetDbContext();
+    private DbSet<T> EntitiesSet => tenantManager.GetDbContext().Set<T>();
     private readonly Semaphore _manipulationQueue = new(1, int.MaxValue);
 
     private class ManipulationWait(Semaphore manipulationQueue) : IDisposable
@@ -33,7 +35,7 @@ public class Repository<T>(ApplicationDbContext context)
     public virtual IQueryable<T> GetAll()
     {
         using var _ = ManipulationWait.Wait(_manipulationQueue).Result;
-        return _entities;
+        return EntitiesSet;
     }
 
     public virtual async Task<T> Get(int id)
@@ -46,28 +48,28 @@ public class Repository<T>(ApplicationDbContext context)
     public virtual async Task Insert(T entity)
     {
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
-        await _entities.AddAsync(entity);
+        await EntitiesSet.AddAsync(entity);
         await SaveChangesHelper();
     }
 
     public virtual async Task InsertRange(IEnumerable<T> Entities)
     {
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
-        await _entities.AddRangeAsync(Entities);
+        await this.EntitiesSet.AddRangeAsync(Entities);
         await SaveChangesHelper();
     }
 
     public virtual async Task Update(T entity)
     {
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
-        _entities.Update(entity);
+        EntitiesSet.Update(entity);
         await SaveChangesHelper();
     }
 
     public virtual async Task UpdateRange(IEnumerable<T> Entities)
     {
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
-        _entities.UpdateRange(Entities.ToArray());
+        this.EntitiesSet.UpdateRange(Entities.ToArray());
         await SaveChangesHelper();
     }
 
@@ -75,7 +77,7 @@ public class Repository<T>(ApplicationDbContext context)
     {
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
         entity.IsDeleted = true;
-        _entities.Update(entity);
+        EntitiesSet.Update(entity);
         await SaveChangesHelper();
     }
 
@@ -85,7 +87,7 @@ public class Repository<T>(ApplicationDbContext context)
         foreach (var item in Entities)
         {
             item.IsDeleted = true;
-            _entities.Update(item);
+            this.EntitiesSet.Update(item);
         }
 
         await SaveChangesHelper();
@@ -94,20 +96,20 @@ public class Repository<T>(ApplicationDbContext context)
     public virtual async Task HardDelete(T entity)
     {
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
-        _entities.Remove(entity);
+        EntitiesSet.Remove(entity);
         await SaveChangesHelper();
     }
 
     public virtual async Task HardDeleteRange(IEnumerable<T> Entities)
     {
         using var _ = await ManipulationWait.Wait(_manipulationQueue);
-        _entities.RemoveRange(Entities);
+        this.EntitiesSet.RemoveRange(Entities);
         await SaveChangesHelper();
     }
 
     private Task SaveChangesHelper()
     {
-        return context.SaveChangesAsync();
+        return Context.SaveChangesAsync();
     }
 
     public async Task SaveChanges()

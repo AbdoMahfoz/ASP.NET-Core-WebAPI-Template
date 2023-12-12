@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Models;
 using Models.DataModels.RoleSystem;
+using Repository.Tenant.Interfaces;
 
 namespace Repository.ExtendedRepositories.RoleSystem;
 
@@ -30,11 +31,11 @@ public interface IPermissionsRepository : IRepository<Permission>
 }
 
 public class PermissionsRepository(
-    ApplicationDbContext db,
+    ITenantManager tenantManager,
     IRepository<RolePermission> RolePermissionRepository,
     IRolesRepository RolesRepository,
     IRepository<UserRole> UserRoleRepository)
-    : Repository<Permission>(db), IPermissionsRepository
+    : Repository<Permission>(tenantManager), IPermissionsRepository
 {
     public void AssignPermissionToRole(string Permission, string Role)
     {

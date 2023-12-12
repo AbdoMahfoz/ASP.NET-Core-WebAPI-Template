@@ -32,6 +32,7 @@ public class JwtAuthorization(
         [
             new Claim(ClaimTypes.Name, user.UserName),
             new Claim("Id", user.Id.ToString()),
+            new Claim("TenantId", user.TenantId.ToString()),
             new Claim("DateIssued", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture))
         ];
         if (options.Value.ValidateRolesFromToken)

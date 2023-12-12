@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Models;
 using Models.DataModels.RoleSystem;
+using Repository.Tenant.Interfaces;
 
 namespace Repository.ExtendedRepositories.RoleSystem;
 
@@ -19,10 +20,10 @@ public interface IRolesRepository : IRepository<Role>
 }
 
 public class RolesRepository(
-    ApplicationDbContext db,
+    ITenantManager tenantManager,
     IUserRepository UserRepository,
     IRepository<UserRole> UserRoleRepository)
-    : Repository<Role>(db), IRolesRepository
+    : Repository<Role>(tenantManager), IRolesRepository
 {
     public void AssignRoleToUser(string Role, string Username)
     {

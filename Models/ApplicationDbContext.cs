@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Models.DataModels;
 using Models.DataModels.RoleSystem;
 using Models.Helpers;
@@ -23,20 +24,20 @@ public class ApplicationDbContext : DbContext
     public DbSet<ActionRole> ActionRoles { get; set; }
     public DbSet<ActionPermission> ActionPermissions { get; set; }
 
+    private int _tenantId;
+    private string _connectionString;
+
     public ApplicationDbContext()
     {
     }
 
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    public ApplicationDbContext(int tenantId = 0, string connectionString = null)
     {
+        _tenantId = tenantId;
+        _connectionString = connectionString;
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
-    {
-        Configure(options);
-    }
-
-    public static void Configure(DbContextOptionsBuilder options)
     {
         options.UseLazyLoadingProxies();
         string file;
@@ -53,36 +54,59 @@ public class ApplicationDbContext : DbContext
             new { AppSettings = new AppSettings() })!.AppSettings;
         if (appSettings.Postgres.Use)
         {
-            var url = Environment.GetEnvironmentVariable("DATABASE_URL");
-            if (string.IsNullOrWhiteSpace(url))
+            if (_connectionString != null)
             {
-                options.UseNpgsql(
-                    $"Host={appSettings.Postgres.Host};" +
-                    $"Port={appSettings.Postgres.Port};" +
-                    $"Database={appSettings.Postgres.DatabaseName};" +
-                    $"Username={appSettings.Postgres.Username};" +
-                    $"Password={appSettings.Postgres.Password}");
+                options.UseNpgsql(_connectionString);
             }
             else
             {
-                url = url[(url.IndexOf("//", StringComparison.Ordinal) + 2)..];
-                var userName = url[..url.IndexOf(':')];
-                url = url[(url.IndexOf(':') + 1)..];
-                var password = url[..url.IndexOf('@')];
-                url = url[(url.IndexOf('@') + 1)..];
-                var host = url[..url.IndexOf(':')];
-                url = url[(url.IndexOf(':') + 1)..];
-                var port = url[..url.IndexOf('/')];
-                var database = url[(url.IndexOf('/') + 1)..];
-                options.UseNpgsql(
-                    $"Host={host};Port={port};Database={database};Username={userName};" +
-                    $"Password={password};SSLMode=Require;TrustServerCertificate=true");
+                var url = Environment.GetEnvironmentVariable("DATABASE_URL");
+                if (string.IsNullOrWhiteSpace(url))
+                {
+                    options.UseNpgsql(
+                        $"Host={appSettings.Postgres.Host};" +
+                        $"Port={appSettings.Postgres.Port};" +
+                        $"Database={appSettings.Postgres.DatabaseName};" +
+                        $"Username={appSettings.Postgres.Username};" +
+                        $"Password={appSettings.Postgres.Password}");
+                }
+                else
+                {
+                    url = url[(url.IndexOf("//", StringComparison.Ordinal) + 2)..];
+                    var userName = url[..url.IndexOf(':')];
+                    url = url[(url.IndexOf(':') + 1)..];
+                    var password = url[..url.IndexOf('@')];
+                    url = url[(url.IndexOf('@') + 1)..];
+                    var host = url[..url.IndexOf(':')];
+                    url = url[(url.IndexOf(':') + 1)..];
+                    var port = url[..url.IndexOf('/')];
+                    var database = url[(url.IndexOf('/') + 1)..];
+                    options.UseNpgsql(
+                        $"Host={host};Port={port};Database={database};Username={userName};" +
+                        $"Password={password};SSLMode=Require;TrustServerCertificate=true");
+                }
             }
         }
         else if (appSettings.Mssql.Use)
         {
-            options.UseSqlServer(appSettings.Mssql.ConnectionString);
+            if (_connectionString == null)
+            {
+                options.UseSqlServer(appSettings.Mssql.ConnectionString);
+            }
+            else
+            {
+                options.UseSqlServer(_connectionString);
+            }
         }
+    }
+
+    private static LambdaExpression MakeEqualityComparison<T>(IReadOnlyTypeBase entityType, string property, T value)
+    {
+        var parameter = Expression.Parameter(entityType.ClrType, "e");
+        var methodInfo = typeof(EF).GetMethod(nameof(EF.Property))!.MakeGenericMethod(typeof(T))!;
+        var efPropertyCall = Expression.Call(null, methodInfo, parameter, Expression.Constant(property));
+        var body = Expression.MakeBinary(ExpressionType.Equal, efPropertyCall, Expression.Constant(value));
+        return Expression.Lambda(body, parameter);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -93,14 +117,15 @@ public class ApplicationDbContext : DbContext
             var isDeletedProperty = entityType.FindProperty(nameof(BaseModel.IsDeleted));
             if (isDeletedProperty != null && isDeletedProperty.ClrType == typeof(bool))
             {
-                var entityBuilder = modelBuilder.Entity(entityType.ClrType);
-                var parameter = Expression.Parameter(entityType.ClrType, "e");
-                var methodInfo = typeof(EF).GetMethod(nameof(EF.Property))!.MakeGenericMethod(typeof(bool))!;
-                var efPropertyCall = Expression.Call(null, methodInfo, parameter,
-                    Expression.Constant(nameof(BaseModel.IsDeleted)));
-                var body = Expression.MakeBinary(ExpressionType.Equal, efPropertyCall, Expression.Constant(false));
-                var expression = Expression.Lambda(body, parameter);
-                entityBuilder.HasQueryFilter(expression);
+                var expression = MakeEqualityComparison(entityType, nameof(BaseModel.IsDeleted), true);
+                modelBuilder.Entity(entityType.ClrType).HasQueryFilter(expression);
+            }
+
+            var tenantIdProperty = entityType.FindProperty(nameof(BaseModel.TenantId));
+            if (tenantIdProperty != null && tenantIdProperty.ClrType == typeof(int))
+            {
+                var expression = MakeEqualityComparison(entityType, nameof(BaseModel.TenantId), _tenantId);
+                modelBuilder.Entity(entityType.ClrType).HasQueryFilter(expression);
             }
         }
     }
@@ -113,6 +138,7 @@ public class ApplicationDbContext : DbContext
             {
                 case EntityState.Added:
                     entry.Entity.AddedDate = DateTime.UtcNow;
+                    entry.Entity.TenantId = _tenantId;
                     break;
                 case EntityState.Modified when entry.Entity.IsDeleted &&
                                                !entry.OriginalValues.GetValue<bool>(nameof(entry.Entity.IsDeleted)):

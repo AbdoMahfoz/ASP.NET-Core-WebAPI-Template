@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Models;
 using Models.DataModels.RoleSystem;
+using Repository.Tenant.Interfaces;
 
 namespace Repository.ExtendedRepositories.RoleSystem;
 
@@ -19,10 +20,10 @@ public interface IActionPermissionRepository : IRepository<ActionPermission>
 }
 
 public class ActionPermissionRepository(
-    ApplicationDbContext db,
+    ITenantManager tenantManager,
     IPermissionsRepository PermissionsRepository,
     IActionRolesRepository ActionRoles)
-    : Repository<ActionPermission>(db), IActionPermissionRepository
+    : Repository<ActionPermission>(tenantManager), IActionPermissionRepository
 {
     public Task AssignPermissionToAction(string ActionName, string PermissionName)
     {

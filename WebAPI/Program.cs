@@ -30,7 +30,9 @@ using System.Reflection;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Repository.ExtendedRepositories.RoleSystem;
-using WebAPI;
+using Repository.Tenant.Implementations;
+using Repository.Tenant.Interfaces;
+using WebAPI.Filters;
 using WebAPI.GenericControllerCreator;
 using WebAPI.Middleware;
 
@@ -53,6 +55,7 @@ services.AddControllers().AddNewtonsoftJson();
 
 services.AddMvc(opt =>
     {
+        opt.Filters.Add(typeof(TenantActionFilter));
         opt.Filters.Add(typeof(ValidatorActionFilter));
         opt.Filters.Add(typeof(RoleActionFilter));
         opt.EnableEndpointRouting = false;
@@ -65,7 +68,6 @@ var appSettingsSection = configuration.GetSection("AppSettings");
 services.Configure<AppSettings>(appSettingsSection);
 var appSettings = appSettingsSection.Get<AppSettings>();
 var key = Encoding.ASCII.GetBytes(appSettings.Secret);
-services.AddDbContext<ApplicationDbContext>(ApplicationDbContext.Configure);
 
 
 services.AddAuthentication(x =>
@@ -135,6 +137,8 @@ services.AddSwaggerGen(c =>
     c.IncludeXmlComments(xmlPath);
 });
 
+services.AddScoped<ITenantManager, TenantManager>();
+services.AddSingleton<ITenantResolver, TokenTenantResolver>();
 services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 services.AddScoped(typeof(IGenericLogic<,,>), typeof(GenericLogic<,,>));
 

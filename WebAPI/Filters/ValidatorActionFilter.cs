@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace WebAPI;
+namespace WebAPI.Filters;
 
 public class ValidatorActionFilter : IActionFilter
 {

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Models;
 using Models.DataModels.RoleSystem;
+using Repository.Tenant.Interfaces;
 
 namespace Repository.ExtendedRepositories.RoleSystem;
 
@@ -18,9 +19,9 @@ public interface IActionRolesRepository : IRepository<ActionRole>
 }
 
 public class ActionRolesRepository(
-    ApplicationDbContext db,
+    ITenantManager tenantManager,
     IRolesRepository RolesRepository)
-    : Repository<ActionRole>(db), IActionRolesRepository
+    : Repository<ActionRole>(tenantManager), IActionRolesRepository
 {
     public Task AssignRoleToAction(string ActionName, string RoleName)
     {
