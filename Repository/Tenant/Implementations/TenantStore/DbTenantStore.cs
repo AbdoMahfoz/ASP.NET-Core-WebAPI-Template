@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ using Repository.Tenant.Interfaces;
 
 namespace Repository.Tenant.Implementations.TenantStore;
 
-public class DbTenantStore : ITenantStore
+public class DbTenantStore : ITenantStore, IDisposable, IAsyncDisposable
 {
     private readonly ApplicationDbContext _tenantContext = new();
     private static readonly object TenantLock = new();
@@ -65,5 +66,27 @@ public class DbTenantStore : ITenantStore
     {
         return _tenantContext.Set<TenantEntry>()
             .Where(u => u.TenantId == tenantId).ExecuteDeleteAsync();
+    }
+
+    public void Dispose()
+    {
+        if (_tenantContext != null)
+        {
+            _tenantContext.SaveChanges();
+            _tenantContext.Dispose();
+        }
+
+        GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_tenantContext != null)
+        {
+            await _tenantContext.SaveChangesAsync();
+            await _tenantContext.DisposeAsync();
+        }
+
+        GC.SuppressFinalize(this);
     }
 }

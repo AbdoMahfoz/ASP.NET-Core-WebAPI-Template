@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Models;
+using Models.DataModels;
 using Repository.Tenant.Interfaces;
 
 namespace Repository.Tenant.Implementations;
@@ -50,9 +51,9 @@ public class TenantManager(ITenantResolver tenantResolver, ITenantStore tenantSt
         SwitchTenant(tenantResolver.ResolveTenant(context));
     }
 
-    public IEnumerable<int> GetAllTenants()
+    public IEnumerable<TenantEntry> GetAllTenants()
     {
-        return tenantStore.GetAllTenants().Select(u => u.TenantId).ToArray();
+        return tenantStore.GetAllTenants().ToArray();
     }
 
     public void Dispose()

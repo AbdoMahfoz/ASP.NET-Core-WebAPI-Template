@@ -7,13 +7,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Models;
 using Models.Helpers;
 using Repository;
 using Repository.ExtendedRepositories;
@@ -150,6 +148,7 @@ else
 {
     services.AddSingleton<ITenantStore, ReadOnlyMemoryTenantStore>();
 }
+
 services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 services.AddScoped(typeof(IGenericLogic<,,>), typeof(GenericLogic<,,>));
 
@@ -175,11 +174,6 @@ services.AddSingleton<IPasswordManager, Rfc2898PasswordManager>();
 
 if (appSettings.ValidateRolesFromToken) services.AddSingleton<IRoleValidator, TokenRoleValidator>();
 else services.AddScoped<IRoleValidator, DbRoleValidator>();
-
-using (var db = new ApplicationDbContext())
-{
-    db.Database.Migrate();
-}
 
 BaseInitializer.StartInitialization(services);
 
