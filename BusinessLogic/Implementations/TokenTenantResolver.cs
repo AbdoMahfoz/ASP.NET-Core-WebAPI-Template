@@ -15,7 +15,7 @@ public class TokenTenantResolver : ITenantResolver
         }
         catch (Exception)
         {
-            return 0;
+            return 1;
         }
     }
 }

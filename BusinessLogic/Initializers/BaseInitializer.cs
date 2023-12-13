@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
+using Repository.Tenant.Interfaces;
 
 namespace BusinessLogic.Initializers;
 
@@ -15,7 +16,13 @@ public abstract class BaseInitializer
         foreach (var type in currentAssembly.GetTypes()
                      .Where(type => type.IsClass && !type.IsAbstract && type.IsSubclassOf(typeof(BaseInitializer))))
         {
-            ((BaseInitializer)ActivatorUtilities.CreateInstance(provider, type)).Initialize();
+            using var scope = provider.CreateScope();
+            var man = scope.ServiceProvider.GetService<ITenantManager>();
+            foreach (var tenantId in man.GetAllTenants())
+            {
+                man.SwitchTenant(tenantId);
+                ((BaseInitializer)ActivatorUtilities.CreateInstance(scope.ServiceProvider, type)).Initialize();
+            }
         }
     }
 

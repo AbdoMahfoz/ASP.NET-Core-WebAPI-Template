@@ -16,7 +16,6 @@ public class Repository<T>(ITenantManager tenantManager)
 {
     private ApplicationDbContext Context => tenantManager.GetDbContext();
     private DbSet<T> EntitiesSet => tenantManager.GetDbContext().Set<T>();
-    private readonly Semaphore _manipulationQueue = new(1, int.MaxValue);
 
     private class ManipulationWait(Semaphore manipulationQueue) : IDisposable
     {
@@ -34,48 +33,48 @@ public class Repository<T>(ITenantManager tenantManager)
 
     public virtual IQueryable<T> GetAll()
     {
-        using var _ = ManipulationWait.Wait(_manipulationQueue).Result;
-        return EntitiesSet;
+        using var _ = ManipulationWait.Wait(tenantManager.ManipulationQueue).Result;
+        return EntitiesSet.Where(u => u.TenantId == tenantManager.TenantId);
     }
 
     public virtual async Task<T> Get(int id)
     {
-        using var _ = await ManipulationWait.Wait(_manipulationQueue);
-        var result = await GetAll().FirstOrDefaultAsync(e => e.Id == id);
+        using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
+        var result = await GetAll().FirstOrDefaultAsync(e => e.Id == id && e.TenantId == tenantManager.TenantId);
         return result;
     }
 
     public virtual async Task Insert(T entity)
     {
-        using var _ = await ManipulationWait.Wait(_manipulationQueue);
+        using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
         await EntitiesSet.AddAsync(entity);
         await SaveChangesHelper();
     }
 
     public virtual async Task InsertRange(IEnumerable<T> Entities)
     {
-        using var _ = await ManipulationWait.Wait(_manipulationQueue);
-        await this.EntitiesSet.AddRangeAsync(Entities);
+        using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
+        await EntitiesSet.AddRangeAsync(Entities);
         await SaveChangesHelper();
     }
 
     public virtual async Task Update(T entity)
     {
-        using var _ = await ManipulationWait.Wait(_manipulationQueue);
+        using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
         EntitiesSet.Update(entity);
         await SaveChangesHelper();
     }
 
     public virtual async Task UpdateRange(IEnumerable<T> Entities)
     {
-        using var _ = await ManipulationWait.Wait(_manipulationQueue);
-        this.EntitiesSet.UpdateRange(Entities.ToArray());
+        using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
+        EntitiesSet.UpdateRange(Entities.ToArray());
         await SaveChangesHelper();
     }
 
     public virtual async Task SoftDelete(T entity)
     {
-        using var _ = await ManipulationWait.Wait(_manipulationQueue);
+        using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
         entity.IsDeleted = true;
         EntitiesSet.Update(entity);
         await SaveChangesHelper();
@@ -83,11 +82,11 @@ public class Repository<T>(ITenantManager tenantManager)
 
     public virtual async Task SoftDeleteRange(IEnumerable<T> Entities)
     {
-        using var _ = await ManipulationWait.Wait(_manipulationQueue);
+        using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
         foreach (var item in Entities)
         {
             item.IsDeleted = true;
-            this.EntitiesSet.Update(item);
+            EntitiesSet.Update(item);
         }
 
         await SaveChangesHelper();
@@ -95,15 +94,15 @@ public class Repository<T>(ITenantManager tenantManager)
 
     public virtual async Task HardDelete(T entity)
     {
-        using var _ = await ManipulationWait.Wait(_manipulationQueue);
+        using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
         EntitiesSet.Remove(entity);
         await SaveChangesHelper();
     }
 
     public virtual async Task HardDeleteRange(IEnumerable<T> Entities)
     {
-        using var _ = await ManipulationWait.Wait(_manipulationQueue);
-        this.EntitiesSet.RemoveRange(Entities);
+        using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
+        EntitiesSet.RemoveRange(Entities);
         await SaveChangesHelper();
     }
 
@@ -114,7 +113,7 @@ public class Repository<T>(ITenantManager tenantManager)
 
     public async Task SaveChanges()
     {
-        using var _ = await ManipulationWait.Wait(_manipulationQueue);
+        using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
         await SaveChangesHelper();
     }
 }

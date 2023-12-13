@@ -23,17 +23,18 @@ public class ApplicationDbContext : DbContext
     public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<ActionRole> ActionRoles { get; set; }
     public DbSet<ActionPermission> ActionPermissions { get; set; }
+    public DbSet<Tenant> Tenants { get; set; }
 
-    private int _tenantId;
+    public int TenantId { get; private init; } = 1;
     private string _connectionString;
 
     public ApplicationDbContext()
     {
     }
 
-    public ApplicationDbContext(int tenantId = 0, string connectionString = null)
+    public ApplicationDbContext(int tenantId = 1, string connectionString = null)
     {
-        _tenantId = tenantId;
+        TenantId = tenantId;
         _connectionString = connectionString;
     }
 
@@ -100,12 +101,13 @@ public class ApplicationDbContext : DbContext
         }
     }
 
-    private static LambdaExpression MakeEqualityComparison<T>(IReadOnlyTypeBase entityType, string property, T value)
+    private static LambdaExpression MakeEqualityComparison<T>(IReadOnlyTypeBase entityType, string property,
+        Expression value)
     {
         var parameter = Expression.Parameter(entityType.ClrType, "e");
         var methodInfo = typeof(EF).GetMethod(nameof(EF.Property))!.MakeGenericMethod(typeof(T))!;
         var efPropertyCall = Expression.Call(null, methodInfo, parameter, Expression.Constant(property));
-        var body = Expression.MakeBinary(ExpressionType.Equal, efPropertyCall, Expression.Constant(value));
+        var body = Expression.MakeBinary(ExpressionType.Equal, efPropertyCall, value);
         return Expression.Lambda(body, parameter);
     }
 
@@ -117,16 +119,20 @@ public class ApplicationDbContext : DbContext
             var isDeletedProperty = entityType.FindProperty(nameof(BaseModel.IsDeleted));
             if (isDeletedProperty != null && isDeletedProperty.ClrType == typeof(bool))
             {
-                var expression = MakeEqualityComparison(entityType, nameof(BaseModel.IsDeleted), true);
+                var expression = MakeEqualityComparison<bool>(entityType, nameof(BaseModel.IsDeleted),
+                    Expression.Constant(false));
                 modelBuilder.Entity(entityType.ClrType).HasQueryFilter(expression);
             }
 
+            /*
             var tenantIdProperty = entityType.FindProperty(nameof(BaseModel.TenantId));
             if (tenantIdProperty != null && tenantIdProperty.ClrType == typeof(int))
             {
-                var expression = MakeEqualityComparison(entityType, nameof(BaseModel.TenantId), _tenantId);
+                var expression = MakeEqualityComparison<int>(entityType, nameof(BaseModel.TenantId),
+                    Expression.Property(Expression.Constant(this), nameof(TenantId)));
                 modelBuilder.Entity(entityType.ClrType).HasQueryFilter(expression);
             }
+            */
         }
     }
 
@@ -138,7 +144,7 @@ public class ApplicationDbContext : DbContext
             {
                 case EntityState.Added:
                     entry.Entity.AddedDate = DateTime.UtcNow;
-                    entry.Entity.TenantId = _tenantId;
+                    entry.Entity.TenantId = TenantId;
                     break;
                 case EntityState.Modified when entry.Entity.IsDeleted &&
                                                !entry.OriginalValues.GetValue<bool>(nameof(entry.Entity.IsDeleted)):

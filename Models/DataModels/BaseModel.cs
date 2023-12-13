@@ -13,7 +13,7 @@ public class BaseModel
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
 
-    [Required] [DefaultValue(0)] public int TenantId { get; set; }
+    [Required] [DefaultValue(1)] public int TenantId { get; set; }
     [Required] public DateTime AddedDate { get; set; }
     public DateTime? ModifiedDate { get; set; }
     [Required] public bool IsDeleted { get; set; } = false;
