@@ -23,7 +23,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<ActionRole> ActionRoles { get; set; }
     public DbSet<ActionPermission> ActionPermissions { get; set; }
-    public DbSet<Tenant> Tenants { get; set; }
+    public DbSet<TenantEntry> Tenants { get; set; }
 
     public int TenantId { get; private init; } = 1;
     private string _connectionString;

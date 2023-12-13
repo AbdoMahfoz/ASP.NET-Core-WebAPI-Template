@@ -31,6 +31,7 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using Repository.ExtendedRepositories.RoleSystem;
 using Repository.Tenant.Implementations;
+using Repository.Tenant.Implementations.TenantStore;
 using Repository.Tenant.Interfaces;
 using WebAPI.Filters;
 using WebAPI.GenericControllerCreator;
@@ -139,6 +140,14 @@ services.AddSwaggerGen(c =>
 
 services.AddScoped<ITenantManager, TenantManager>();
 services.AddSingleton<ITenantResolver, TokenTenantResolver>();
+if (appSettings.Tenant.UseDbStore)
+{
+    services.AddScoped<ITenantStore, DbTenantStore>();
+}
+else
+{
+    services.AddSingleton<ITenantStore, ReadOnlyMemoryTenantStore>();
+}
 services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 services.AddScoped(typeof(IGenericLogic<,,>), typeof(GenericLogic<,,>));
 

@@ -235,7 +235,7 @@ namespace Models.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("Models.DataModels.Tenant", b =>
+            modelBuilder.Entity("Models.DataModels.TenantEntry", b =>
                 {
                     b.Property<int>("TenantId")
                         .ValueGeneratedOnAdd()

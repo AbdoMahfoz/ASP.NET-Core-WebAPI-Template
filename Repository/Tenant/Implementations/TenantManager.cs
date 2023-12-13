@@ -9,37 +9,10 @@ using Repository.Tenant.Interfaces;
 
 namespace Repository.Tenant.Implementations;
 
-public class TenantManager : ITenantManager, IDisposable, IAsyncDisposable
+public class TenantManager(ITenantResolver tenantResolver, ITenantStore tenantStore)
+    : ITenantManager, IDisposable, IAsyncDisposable
 {
     private ApplicationDbContext _dbContext;
-    private readonly ApplicationDbContext _tenantContext = new();
-    private readonly ITenantResolver _tenantResolver;
-    private static readonly object TenantLock = new();
-
-    public TenantManager(ITenantResolver tenantResolver)
-    {
-        _tenantResolver = tenantResolver;
-        lock (TenantLock)
-        {
-            if (!_tenantContext.Set<Models.DataModels.Tenant>().Any())
-            {
-                _tenantContext.Set<Models.DataModels.Tenant>().AddRange(
-                    new Models.DataModels.Tenant
-                    {
-                        TenantId = 1,
-                        ConnectionString = null
-                    },
-                    new Models.DataModels.Tenant
-                    {
-                        TenantId = 2,
-                        ConnectionString = null
-                    }
-                );
-                _tenantContext.SaveChanges();
-            }
-        }
-    }
-
     public int TenantId { get; private set; } = 1;
     public Semaphore ManipulationQueue { get; } = new(1, int.MaxValue);
 
@@ -51,7 +24,7 @@ public class TenantManager : ITenantManager, IDisposable, IAsyncDisposable
     public void SwitchTenant(int tenantId)
     {
         if (tenantId == TenantId) return;
-        var tenant = _tenantContext.Set<Models.DataModels.Tenant>().SingleOrDefault(u => u.TenantId == tenantId);
+        var tenant = tenantStore.GetTenant(tenantId).Result;
         if (tenant == null)
         {
             throw new Exception($"Couldn't find tenant Id {tenantId}");
@@ -74,12 +47,12 @@ public class TenantManager : ITenantManager, IDisposable, IAsyncDisposable
 
     public void ResolveTenant(HttpContext context)
     {
-        SwitchTenant(_tenantResolver.ResolveTenant(context));
+        SwitchTenant(tenantResolver.ResolveTenant(context));
     }
 
     public IEnumerable<int> GetAllTenants()
     {
-        return _tenantContext.Set<Models.DataModels.Tenant>().Select(u => u.TenantId).ToArray();
+        return tenantStore.GetAllTenants().Select(u => u.TenantId).ToArray();
     }
 
     public void Dispose()

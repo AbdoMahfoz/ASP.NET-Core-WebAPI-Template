@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Models.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20231212030348_Init")]
+    [Migration("20231213164339_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -54,6 +54,9 @@ namespace Models.Migrations
                     b.Property<int>("PermissionId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PermissionId");
@@ -87,6 +90,9 @@ namespace Models.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("RoleId");
@@ -117,6 +123,9 @@ namespace Models.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.ToTable("Permissions");
@@ -144,6 +153,9 @@ namespace Models.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("text");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -174,6 +186,9 @@ namespace Models.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TenantId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -208,6 +223,9 @@ namespace Models.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
@@ -218,6 +236,22 @@ namespace Models.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserRoles");
+                });
+
+            modelBuilder.Entity("Models.DataModels.TenantEntry", b =>
+                {
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TenantId"));
+
+                    b.Property<string>("ConnectionString")
+                        .HasColumnType("text");
+
+                    b.HasKey("TenantId");
+
+                    b.ToTable("Tenants");
                 });
 
             modelBuilder.Entity("Models.DataModels.User", b =>
@@ -249,6 +283,9 @@ namespace Models.Migrations
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("UserName")
                         .IsRequired()
