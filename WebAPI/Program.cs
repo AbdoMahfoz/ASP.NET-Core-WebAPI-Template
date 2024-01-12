@@ -44,14 +44,7 @@ builder.Logging.AddConfiguration(configuration.GetSection("Logging"))
     .AddEventSourceLogger();
 var services = builder.Services;
 
-services.Configure<CookiePolicyOptions>(options =>
-{
-    // This lambda determines whether user consent for non-essential cookies is needed for a given request.
-    options.CheckConsentNeeded = _ => true;
-    options.MinimumSameSitePolicy = SameSiteMode.None;
-});
-
-services.AddControllers().AddNewtonsoftJson();
+services.AddControllers();
 
 services.AddMvc(opt =>
     {
@@ -179,22 +172,22 @@ BaseInitializer.StartInitialization(services);
 
 var app = builder.Build();
 if (builder.Environment.IsDevelopment()) app.UseDeveloperExceptionPage();
-else app.UseHsts();
-app.UseMiddleware(typeof(ErrorHandlingMiddleware));
-app.UseHttpsRedirection();
+else app.UseMiddleware(typeof(ErrorHandlingMiddleware));
+//app.UseHttpsRedirection();
 app.UseCors(x => x
     .AllowAnyOrigin()
     .AllowAnyMethod()
     .AllowAnyHeader());
 app.UseStaticFiles();
-app.UseAuthentication();
-app.UseCookiePolicy();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json",
         $"{configuration.GetSection("AppSettings").Get<AppSettings>().SiteData.Name} API V1");
 });
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.MapSwagger();
 

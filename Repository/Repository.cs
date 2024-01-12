@@ -39,7 +39,6 @@ public class Repository<T>(ITenantManager tenantManager)
 
     public virtual async Task<T> Get(int id)
     {
-        using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
         var result = await GetAll().FirstOrDefaultAsync(e => e.Id == id && e.TenantId == tenantManager.TenantId);
         return result;
     }
