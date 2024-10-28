@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,31 +9,40 @@ namespace Models.Helpers;
 ///     This Attribute is used to identify which entities to expose in the API
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class ExposeToApi(Type dtoIn, Type dtoOut) : Attribute
+public class ExposeToApi : Attribute
 {
-    public Type DtoIn = dtoIn, DtoOut = dtoOut;
+    public Type DtoIn { get; }
+    public Type DtoOut { get; }
+
+    public ExposeToApi(Type dtoIn, Type dtoOut)
+    {
+        DtoIn = dtoIn;
+        DtoOut = dtoOut;
+    }
 }
 
 public static class IncludedEntities
 {
-    public static IReadOnlyList<(Type, Type, Type)> Types;
+    //Types are loaded with Lazy<T> to improve performance and resource utilization
+    private static readonly Lazy<IReadOnlyList<(Type entityType, Type dtoIn, Type dtoOut)>> _types = new Lazy<IReadOnlyList<(Type, Type, Type)>>(LoadTypes);
 
-    static IncludedEntities()
+    public static IReadOnlyList<(Type, Type, Type)> Types => _types.Value;
+
+    private static IReadOnlyList<(Type, Type, Type)> LoadTypes()
     {
         var assembly = typeof(IncludedEntities).GetTypeInfo().Assembly;
         var typeList = new List<(Type, Type, Type)>();
-
+        //Simplified the attribute fetching using GetCustomAttribute<>() instead of GetCustomAttributes() and checking the length
         foreach (var type in assembly.GetLoadableTypes())
         {
-            var attribs = type.GetCustomAttributes(typeof(ExposeToApi), true);
-            if (attribs.Length > 0)
+            var attrib = type.GetCustomAttribute<ExposeToApi>();
+            if (attrib != null)
             {
-                var o = (ExposeToApi)attribs[0];
-                typeList.Add((type, o.DtoIn, o.DtoOut));
+                typeList.Add((type, attrib.DtoIn, attrib.DtoOut));
             }
         }
 
-        Types = typeList;
+        return typeList;
     }
 
     public static IEnumerable<Type> GetLoadableTypes(this Assembly assembly)
