@@ -8,6 +8,7 @@ using Models.DataModels.RoleSystem;
 using Models.Helpers;
 using Repository.ExtendedRepositories.RoleSystem;
 using Services.DTOs;
+using Services.DTOs.Requests;
 using Services.RoleSystem;
 
 namespace BusinessLogic.Initializers;
@@ -99,7 +100,8 @@ public class RoleInitializer(
         }
 
         if (userRepository.GetAll().Any()) return;
-        accountLogic.Register(new UserAuthenticationRequest { Username = "Admin", Password = "123123123" },
-            "Admin");
+        accountLogic.Register(new CreateUserRequest { UserName = "Admin", Password = "123123123" },
+            roleRepository.GetRole(RoleNames.Admin.ToString())?.Id)
+            .GetAwaiter().GetResult();
     }
 }

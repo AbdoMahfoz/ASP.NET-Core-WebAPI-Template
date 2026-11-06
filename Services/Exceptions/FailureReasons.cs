@@ -54,6 +54,21 @@ public enum FailureReasons
     /// <summary>Too many failed attempts for this account within the lockout window.</summary>
     AccountLockedOut,
 
+    /// <summary>The password does not mix upper case, lower case, a digit and a special character at the minimum length.</summary>
+    WeakPassword,
+
+    /// <summary>Another account already owns this username.</summary>
+    UsernameAlreadyTaken,
+
+    /// <summary>No role exists with that id.</summary>
+    RoleNotFound,
+
+    /// <summary>A role with that name already exists.</summary>
+    RoleAlreadyExists,
+
+    /// <summary>No usable account exists with that id in the caller's scope.</summary>
+    UserNotFound,
+
     /// <summary>The session/token backing this request is no longer valid.</summary>
     InvalidSession
 }

@@ -36,13 +36,14 @@ public class RolesRepository(
         {
             UserId = UserId,
             RoleId = GetRole(Role).Id
-        });
+        }).Wait();
     }
 
     public void RemoveRoleFormUser(string Role, int UserId)
     {
         var userRole = UserRoleRepository.GetAll().FirstOrDefault(x => x.UserId == UserId && x.Role.Name == Role);
-        UserRoleRepository.SoftDelete(userRole);
+        // A void API must not hand its write back as an un-awaited task: callers keep going while the delete is still in flight, and on a shared context that is how two writers end up saving the same graph twice.
+        UserRoleRepository.SoftDelete(userRole).Wait();
     }
 
     public Role GetRole(string Name)

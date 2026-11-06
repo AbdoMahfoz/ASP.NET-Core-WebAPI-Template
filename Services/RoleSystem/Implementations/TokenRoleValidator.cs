@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Security.Claims;
 using Services.Extensions;
 using Services.RoleSystem.Interfaces;
@@ -31,6 +32,26 @@ public class TokenRoleValidator : IRoleValidator
             }
             return false;
         }
+    /// <summary>
+    ///     Claim-backed counterpart of the database validator: when the application trusts role claims it must still refuse a caller whose claims hold none of the requested roles, and an empty request list is refused rather than accepted vacuously. 
+    /// </summary>
+    public bool ValidateAnyRole(ClaimsPrincipal User, string[] Roles)
+    {
+            if (Roles.Length == 0) return false;
+
+            var userRoles = new SortedSet<string>(User.GetRoles(), StringComparer.OrdinalIgnoreCase);
+
+            foreach (var role in Roles)
+            {
+                if (userRoles.Contains(role))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
     public bool ValidateRoles(ClaimsPrincipal User, string[] Roles)
     {
             var userRoles = new SortedSet<string>(User.GetRoles());

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
 
@@ -32,8 +33,17 @@ public static class ClaimsPrincipalExtensions
     {
         Verify(principal);
         return principal.Claims.Where(claim => claim.Type == "DateIssued")
-            .Select(claim => DateTime.Parse(claim.Value))
+            .Select(claim => DateTime.Parse(claim.Value, CultureInfo.InvariantCulture))
             .Single();
+    }
+
+    /// <summary>The role claim to act on, or null when the token carries no role claim.</summary>
+    public static string? GetRole(this ClaimsPrincipal principal)
+    {
+        Verify(principal);
+        return principal.Claims.Where(claim => claim.Type == ClaimTypes.Role)
+            .Select(claim => claim.Value)
+            .FirstOrDefault();
     }
 
     public static IEnumerable<string> GetRoles(this ClaimsPrincipal principal)

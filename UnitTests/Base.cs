@@ -141,8 +141,12 @@ public class MainWebApplicationFactory<TProgram> : WebApplicationFactory<TProgra
     {         
         using var scope = Scope();         
 
+        var roleId = scope.ServiceProvider
+            .GetRequiredService<Repository.ExtendedRepositories.RoleSystem.IRolesRepository>()
+            .GetRole(roleName)?.Id;
+
         var accountLogic = scope.ServiceProvider.GetRequiredService<IAccountLogic>();         
-        if (!accountLogic.Register(new Services.DTOs.UserAuthenticationRequest { Username = userName, Password = password }, roleName))             
+        if (accountLogic.Register(new Services.DTOs.Requests.CreateUserRequest { UserName = userName, Password = password }, roleId).GetAwaiter().GetResult() == null)             
             throw new InvalidOperationException($"Harness could not register user '{userName}' with role '{roleName}'.");         
 
         using var dbScope = Scope();         

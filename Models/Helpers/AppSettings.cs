@@ -10,6 +10,11 @@ public class AppSettings
     public MssqlObject Mssql { get; set; }
     public string Secret { get; set; }
     public int TokenExpirationMinutes { get; set; }
+
+    /// <summary>
+    ///     How many consecutive wrong passwords an account tolerates before authentication stops accepting attempts for it. A successful login clears the counter.
+    /// </summary>
+    public int AccountLockThreshold { get; set; } = 5;
     public string LocalDatabaseName { get; set; }
     public bool ValidateRolesFromToken { get; set; }
 
