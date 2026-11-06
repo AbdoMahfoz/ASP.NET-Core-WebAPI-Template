@@ -154,7 +154,8 @@ services.AddSingleton<IPasswordManager, Rfc2898PasswordManager>();
 if (appSettings.ValidateRolesFromToken) services.AddSingleton<IRoleValidator, TokenRoleValidator>();
 else services.AddScoped<IRoleValidator, DbRoleValidator>();
 
-BaseInitializer.StartInitialization(services);
+// The test harness runs initialization against its own database with testingRun: true, so production migration only happens outside a harness run.
+if (!BaseInitializer.UseTestingDb) BaseInitializer.StartInitialization(services);
 
 var app = builder.Build();
 if (builder.Environment.IsDevelopment()) app.UseDeveloperExceptionPage();
@@ -171,6 +172,9 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json",
         $"{configuration.GetSection("AppSettings").Get<AppSettings>().SiteData.Name} API V1");
 });
+// Typed exception -> status mapping. Tenant and role resolution run in MVC filters further in the pipeline,
+// so this handler wraps them; anything it does not map falls through to ErrorHandlingMiddleware.
+app.UseMiddleware(typeof(CommonExceptionsMiddleware));
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -178,3 +182,8 @@ app.MapControllers();
 app.MapSwagger();
 
 app.Run();
+
+// Exposed so the WebApplicationFactory based harness can boot this exact application.
+public partial class Program
+{
+}

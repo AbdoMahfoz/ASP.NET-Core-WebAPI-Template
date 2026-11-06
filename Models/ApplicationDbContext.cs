@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
+using System.Data;
 using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Models.DataModels;
@@ -27,6 +31,8 @@ public class ApplicationDbContext : DbContext
 
     public int TenantId { get; private init; } = 1;
     private string _connectionString;
+    private DbConnection _connection;
+    private bool _ownsConnection;
 
     public ApplicationDbContext()
     {
@@ -38,9 +44,39 @@ public class ApplicationDbContext : DbContext
         _connectionString = connectionString;
     }
 
+    /// <summary>
+    ///     Uses the supplied SQLite connection verbatim, opening it when needed. An explicitly supplied connection
+    ///     replaces the provider selected from appsettings, which is how the test harness runs on an in-memory database.
+    /// </summary>
+    public ApplicationDbContext(SqliteConnection connection, int tenantId = 1)
+    {
+        if (connection == null) throw new ArgumentNullException(nameof(connection));
+
+        if (connection.State != ConnectionState.Open) connection.Open();
+
+        _connection = connection;
+        TenantId = tenantId;
+    }
+
+    /// <summary>
+    ///     Opens a SQLite connection from the given connection string and owns its disposal.
+    /// </summary>
+    public ApplicationDbContext(string sqliteConnectionString, int tenantId)
+        : this(new SqliteConnection(sqliteConnectionString), tenantId)
+    {
+        _ownsConnection = true;
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
         options.UseLazyLoadingProxies();
+
+        if (_connection != null)
+        {
+            options.UseSqlite(_connection);
+            return;
+        }
+
         string file;
         try
         {

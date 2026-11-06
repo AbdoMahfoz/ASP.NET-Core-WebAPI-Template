@@ -40,5 +40,20 @@ public enum FailureReasons
     DateShouldBeInTheFuture,
 
     /// <summary>An operation that changes data was sent without a modification reason.</summary>
-    MissingModificationReasons
+    MissingModificationReasons,
+
+    /// <summary>The addressed resource does not exist in the caller's scope.</summary>
+    NotFound,
+
+    /// <summary>The caller is not allowed to perform this operation.</summary>
+    AccessDenied,
+
+    /// <summary>The caller's role does not grant the permission this operation requires.</summary>
+    InsufficientRole,
+
+    /// <summary>Too many failed attempts for this account within the lockout window.</summary>
+    AccountLockedOut,
+
+    /// <summary>The session/token backing this request is no longer valid.</summary>
+    InvalidSession
 }

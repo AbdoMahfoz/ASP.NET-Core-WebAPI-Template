@@ -21,9 +21,13 @@ public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandling
         }
     }
 
-    private Task HandleExceptionAsync(HttpContext context, Exception ex)
+    private async Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
-        logger.LogError(ex, ex.Message);
+        logger.LogError(ex, "{Message}", ex.Message);
+
+        // The response was already partly sent: there is nothing to rewrite, and writing over it would corrupt it.
+        if (context.Response.HasStarted || !context.Response.Body.CanWrite)
+            return;
         var code = HttpStatusCode.InternalServerError; // 500 if unexpected
 
         // if (ex is NullReferenceException) ex.Message = "On"
@@ -31,6 +35,21 @@ public class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandling
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)code;
-        return context.Response.WriteAsync(result);
+        try
+        {
+            await context.Response.WriteAsync(result);
+        }
+        catch (ObjectDisposedException)
+        {
+            // Client vanished mid-write.
+        }
+        catch (InvalidOperationException)
+        {
+            // Another component already started the response body.
+        }
+        catch (OperationCanceledException)
+        {
+            // Request aborted.
+        }
     }
 }
