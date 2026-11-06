@@ -4,6 +4,7 @@ using Models;
 using Models.DataModels;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Repository.Tenant.Interfaces;
@@ -48,6 +49,14 @@ public class Repository<T>(ITenantManager tenantManager)
         using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
         await EntitiesSet.AddAsync(entity);
         await SaveChangesHelper();
+    }
+
+    public virtual async Task<T> InsertAndReturnTrackedEntity(T entity)
+    {
+        using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
+        await EntitiesSet.AddAsync(entity);
+        await SaveChangesHelper();
+        return entity;
     }
 
     public virtual async Task InsertRange(IEnumerable<T> Entities)
@@ -103,6 +112,14 @@ public class Repository<T>(ITenantManager tenantManager)
         using var _ = await ManipulationWait.Wait(tenantManager.ManipulationQueue);
         EntitiesSet.RemoveRange(Entities);
         await SaveChangesHelper();
+    }
+
+    /// <summary>
+    ///     Attaches the instance and flags a single property. No queue is taken because nothing is written to the database here; the caller decides when to call SaveChanges.
+    /// </summary>
+    public virtual void MarkModified<TP>(T instance, Expression<Func<T, TP>> property)
+    {
+        EntitiesSet.Attach(instance).Property(property).IsModified = true;
     }
 
     private Task SaveChangesHelper()

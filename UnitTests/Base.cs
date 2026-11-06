@@ -129,10 +129,11 @@ public class MainWebApplicationFactory<TProgram> : WebApplicationFactory<TProgra
 
         HarnessTenantManager.SeedTenant(Db);         
 
-        // The same initialization the application runs on startup, but against the harness database and its container.         
+        // The same initialization the application runs on startup, but against the harness database and its container. 
+        // Initializers save through their own repositories, so nothing is left for this context to write: calling SaveChanges here would race with an initializer that is still finishing on the same context instance. 
         BaseInitializer.StartInitialization(base.Services, testingRun: true);         
 
-        Db.SaveChanges();     
+        Db.ChangeTracker.Clear();     
     }     
 
     /// <summary>Registers a user with the given role name and returns its user id.</summary>     

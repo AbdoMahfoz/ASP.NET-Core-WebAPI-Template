@@ -8,10 +8,15 @@ public class BaseDto
     public string Id { get; set; }
 }
 
+/// <summary>
+///     One page of results. PageIndex is 1-based (see Services.DTOs.PagedRequestBase), PerPage is the page size actually applied,
+///     TotalCount is every matching item and TotalPageCount is how many pages that many items produce.
+/// </summary>
 public class PagedResult<T>
 {
     public int PageIndex { get; set; }
     public int PerPage { get; set; }
+    public int TotalCount { get; set; }
     public int TotalPageCount { get; set; }
     public IEnumerable<T> Data { get; set; }
 }
