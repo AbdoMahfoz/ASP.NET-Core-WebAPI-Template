@@ -1,0 +1,69 @@
+---
+name: PR tester
+
+# Pull requests against master run the whole suite through the harness in
+# UnitTests/Base.cs: the real WebAPI pipeline - middleware chain, action
+# filters, authentication and role guards - booted against a SQLite-backed
+# harness database instead of hand-wired fakes. This job is therefore both
+# the unit-test gate and the endpoint smoke test for the template.
+
+on:
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Restore, build and test with coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the pull request
+        uses: actions/checkout@v7
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore WebAPI.sln
+
+      - name: Build
+        run: dotnet build WebAPI.sln --configuration Release --no-restore
+
+      # The harness owns one in-memory SQLite database per factory and every
+      # write is serialized through a tenant queue, so the suite needs no
+      # parallelization (UnitTests/AssemblyInfo.cs) and no live database.
+      - name: Test with coverage
+        run: >-
+          dotnet test UnitTests/UnitTests.csproj --configuration Release
+          --no-build --collect:"XPlat Code Coverage"
+          --results-directory TestResults
+
+      # ReportGenerator is referenced by UnitTests/UnitTests.csproj; its net10
+      # tool asset turns coverlet's cobertura output into a summary plus a
+      # browsable HTML report. The restore above already put it in the cache.
+      - name: Coverage summary and HTML report
+        run: |
+          pkg="$HOME/.nuget/packages/reportgenerator"
+
+          rg=$(ls -d "$pkg"/*/tools/net10.0 | tail -1)
+
+          dotnet "$rg/ReportGenerator.dll" \
+            -reports:"TestResults/**/coverage.cobertura.xml" \
+            -targetdir:coverage-report \
+            -reporttypes:"TextSummary;Html"
+
+          cat coverage-report/Summary.txt
+
+      # The report is for reviewers to browse in the run, not something the
+      # repository has to carry.
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: coverage-report/
+          retention-days: 14

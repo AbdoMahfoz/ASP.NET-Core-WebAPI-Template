@@ -1,0 +1,59 @@
+---
+name: Deploy branch sync
+
+# Replaces deployScript, which used to be run by hand as a single line:
+#   git checkout deploy && git pull origin deploy && git merge master
+#   && git push origin deploy && git checkout master   (after pulling master)
+# The same thing happens here on every merge to master. No credential lives
+# in a script file anymore: actions/checkout authorizes origin with the
+# job's own short-lived token (contents: write below), so the push is
+# authorized by the workflow rather than by a personal token somebody left
+# in the repository. A missing deploy branch is created from master, because
+# the template ships without one. A merge conflict exits non-zero and fails
+# the job instead of shipping something nobody reviewed.
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-branch-sync
+
+jobs:
+  sync-deploy-branch:
+    name: Merge master into deploy and push it
+    runs-on: ubuntu-latest
+    env:
+      GIT_AUTHOR_NAME: github-actions[bot]
+      GIT_COMMITTER_NAME: github-actions[bot]
+      GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+      GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+    steps:
+      - name: Check out with full history
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # The push event is a merge into master, so origin/master is exactly
+      # the commit that just landed and is the one being merged forward.
+      - name: Merge master into deploy and push it
+        run: |
+          set -euo pipefail
+
+          if git ls-remote --exit-code --heads origin deploy >/dev/null; then
+            git checkout -b deploy origin/deploy
+            git pull origin deploy
+          else
+            echo "No deploy branch yet; creating one from master."
+            git checkout -b deploy
+          fi
+
+          # The identity comes from the GIT_AUTHOR_* / GIT_COMMITTER_* vars.
+          git merge --no-edit origin/master
+
+          # A conflict above exits non-zero on purpose: nothing is deployed.
+          git push origin deploy

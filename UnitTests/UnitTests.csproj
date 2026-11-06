@@ -8,8 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="10.1.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.14" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="ReportGenerator" Version="5.5.12" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
       <PrivateAssets>all</PrivateAssets>
@@ -18,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="UnitTest1.cs" />
+    <!-- Every .cs file in UnitTests is a real test now, so nothing is excluded from compilation. -->
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\WebAPI\WebAPI.csproj" />
