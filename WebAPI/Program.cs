@@ -24,7 +24,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using BusinessLogic.Implementations.Cache;
+using WebAPI.Extensions;
 using Microsoft.Extensions.Logging;
 using Repository.ExtendedRepositories.RoleSystem;
 using Repository.Tenant.Implementations;
@@ -119,7 +119,7 @@ services.AddSwaggerGen(c =>
 
 services.AddScoped<ITenantManager, TenantManager>();
 services.AddSingleton<ITenantResolver, TokenTenantResolver>();
-services.AddSingleton<ICache, MemoryCache>();
+services.AddConfiguredCache(appSettings);
 if (appSettings.Tenant.UseDbStore)
 {
     services.AddScoped<ITenantStore, DbTenantStore>();

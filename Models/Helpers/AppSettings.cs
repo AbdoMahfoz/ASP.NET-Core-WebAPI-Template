@@ -13,10 +13,25 @@ public class AppSettings
     public string LocalDatabaseName { get; set; }
     public bool ValidateRolesFromToken { get; set; }
 
+    public RedisObject Redis { get; set; }
+
     public class MssqlObject
     {
         public bool Use { get; set; }
         public string ConnectionString { get; set; }
+    }
+
+    public class RedisObject
+    {
+        public bool Use { get; set; }
+
+        /// <summary>Placeholder only - point this at your own server or a secret store, never commit a real endpoint.</summary>
+        public string ConnectionString { get; set; }
+
+        /// <summary>
+        ///     Maps to the certificate-strictness knob the Redis client exposes today (revocation checking). When true the client keeps strict certificate handling.
+        /// </summary>
+        public bool ValidateCertificate { get; set; } = true;
     }
 
     public class PostgresObject
