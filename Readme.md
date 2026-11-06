@@ -90,8 +90,15 @@ build context.
 
 ```bash
 docker build -t asp-template-api .
-docker run --rm -p 8080:8080 asp-template-api   # ASPNET_URLS is set in the image; configure your own secret externally
+docker run --rm -p 8080:8080 asp-template-api
 ```
+
+The image listens on 8080 (`ASPNETCORE_URLS` is set in the image) and runs as the
+runtime image's unprivileged account. Nothing that a real deployment should own is
+baked in: no database credentials, no signing secret, no telemetry endpoint, no
+tunnel sidecar. Point the API at a database either with `DATABASE_URL` or by editing
+the Postgres section of `appsettings.json`, and pass the signing secret, mail
+credentials and OTLP endpoint through your own configuration or secret store.
 
 ## Contributing
 

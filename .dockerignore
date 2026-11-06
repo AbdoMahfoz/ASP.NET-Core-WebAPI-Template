@@ -1,0 +1,37 @@
+# Build output and intermediate artifacts.
+**/bin/
+**/obj/
+**/artifacts/
+**/*.user
+**/*.suo
+
+# Test and coverage output (CI produces these, images never need them).
+TestResults/
+coverage-report/
+coveragereport/
+coverage.cobertura.xml
+
+# Node artifacts (in case a fork adds a client build step).
+**/node_modules/
+npm-debug.log
+
+# IDE, VCS and local harness state.
+.vs/
+.vscode/
+.idea/
+.git/
+.github/
+.pi/
+
+# Local secrets and dev certificates. appsettings.json stays in the image because it only holds placeholder values.
+.env
+secrets.local.json
+appsettings.Local.json
+*.pfx
+*.key
+
+# Orchestration descriptors stay outside the image.
+compose.yaml
+compose.yml
+azds.yaml
+Dockerfile*
