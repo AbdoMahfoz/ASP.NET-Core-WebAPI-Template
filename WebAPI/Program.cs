@@ -1,12 +1,11 @@
 ﻿using BusinessLogic.Implementations;
 using BusinessLogic.Initializers;
 using BusinessLogic.Interfaces;
-using FluentValidation;
-using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,7 +19,6 @@ using Services.Helpers.MailService;
 using Services.RoleSystem;
 using Services.RoleSystem.Implementations;
 using Services.RoleSystem.Interfaces;
-using Services.Validators;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -55,7 +53,9 @@ services.AddMvc(opt =>
     })
     .ConfigureApplicationPartManager(p => p.FeatureProviders.Add(new GenericControllerFeatureProvider()));
 
-services.AddFluentValidationAutoValidation().AddFluentValidationClientsideAdapters();
+// ValidatorActionFilter owns model-validation failures: without this, [ApiController] short-circuits an invalid
+// ModelState into its own BadRequestObjectResult before any action filter runs.
+services.Configure<ApiBehaviorOptions>(opt => opt.SuppressModelStateInvalidFilter = true);
 
 var appSettingsSection = configuration.GetSection("AppSettings");
 services.Configure<AppSettings>(appSettingsSection);
@@ -144,7 +144,6 @@ services.AddScoped<IActionRoleManager, ActionRoleManager>();
 
 services.AddTransient<IAuth, JwtAuthorization>();
 services.AddTransient<IAccountLogic, AccountLogic>();
-services.AddTransient<IValidator<UserAuthenticationRequest>, UserAuthenticationRequestValidator>();
 services.AddTransient<IMailService, SmtpMailService>();
 services.AddTransient<IRolesAndPermissionsManager, RolesAndPermissionsManager>();
 

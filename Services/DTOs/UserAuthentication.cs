@@ -1,8 +1,15 @@
-﻿namespace Services.DTOs;
+﻿using System.ComponentModel.DataAnnotations;
+using Services.Exceptions;
+
+namespace Services.DTOs;
 
 public class UserAuthenticationRequest
 {
+    [Required(AllowEmptyStrings = false, ErrorMessage = nameof(FailureReasons.UsernameRequired))]
     public string Username { get; set; }
+
+    [Required(AllowEmptyStrings = false, ErrorMessage = nameof(FailureReasons.PasswordRequired))]
+    [MinLength(8, ErrorMessage = nameof(FailureReasons.PasswordTooShort))]
     public string Password { get; set; }
 }
 public class UserAuthenticationResult
