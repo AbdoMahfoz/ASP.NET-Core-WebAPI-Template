@@ -2,6 +2,7 @@
 using System.Linq;
 using Models.DataModels;
 using Repository.Tenant.Interfaces;
+using OpenTelemetry.Trace;
 using Microsoft.EntityFrameworkCore;
 
 namespace Repository.ExtendedRepositories;
@@ -21,8 +22,8 @@ public interface IUserRepository : IRepository<User>
     int CountUsersInRole(string roleName);
 }
 
-public class UserRepository(ITenantManager tenantManager)
-    : Repository<User>(tenantManager), IUserRepository
+public class UserRepository(ITenantManager tenantManager, Tracer tracer)
+    : Repository<User>(tenantManager, tracer), IUserRepository
 {
     public User GetUser(string username)
     {

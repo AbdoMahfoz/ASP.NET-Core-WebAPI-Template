@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Models;
 using Models.DataModels.RoleSystem;
 using Repository.Tenant.Interfaces;
+using OpenTelemetry.Trace;
 
 namespace Repository.ExtendedRepositories.RoleSystem;
 
@@ -34,8 +35,9 @@ public class PermissionsRepository(
     ITenantManager tenantManager,
     IRepository<RolePermission> RolePermissionRepository,
     IRolesRepository RolesRepository,
-    IRepository<UserRole> UserRoleRepository)
-    : Repository<Permission>(tenantManager), IPermissionsRepository
+    IRepository<UserRole> UserRoleRepository,
+    Tracer tracer)
+    : Repository<Permission>(tenantManager, tracer), IPermissionsRepository
 {
     public void AssignPermissionToRole(string Permission, string Role)
     {

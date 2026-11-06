@@ -8,14 +8,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Trace;
+using Repository.Extensions;
 using Newtonsoft.Json.Linq;
 
 namespace BusinessLogic.Implementations;
 
-public class GenericLogic<T, TDIn, TDOut>(IRepository<T> genericRepository) : IGenericLogic<T, TDIn, TDOut>
+public class GenericLogic<T, TDIn, TDOut>(IRepository<T> genericRepository, Tracer tracer) : IGenericLogic<T, TDIn, TDOut>
     where T : BaseModel, new()
     where TDOut : BaseDto, new()
 {
+    /// <summary>
+    ///     Spans for the operations this layer performs through the repository, named GenericLogic&lt;Model&gt;::Method like the data layer's own spans. The read members are deliberately not spanned here: GetAll returns rows straight from the repository (which carries its own span) or builds a lazy query that is only executed by whoever consumes it, and a span opened around a lazy query would close before the query ran and report a duration that never happened.
+    /// </summary>
+    private TelemetrySpan Span(string method) => tracer.StartActiveSpan(SpanExtensions.SpanName("GenericLogic", typeof(T), method));
+
+
     public virtual IEnumerable<TDOut> GetAll(IDictionary<string, object> relationalIds = null)
     {
         var baseQuery = genericRepository.GetAll();
@@ -64,6 +72,8 @@ public class GenericLogic<T, TDIn, TDOut>(IRepository<T> genericRepository) : IG
 
     public virtual int Insert(TDIn entity)
     {
+        using var span = Span(nameof(Insert));   // named GenericLogic&lt;Model&gt;::Insert through the shared span helper.
+
         var res = ObjectHelpers.MapTo<T>(entity);
         genericRepository.Insert(res).Wait();
         return res.Id;
@@ -78,6 +88,8 @@ public class GenericLogic<T, TDIn, TDOut>(IRepository<T> genericRepository) : IG
 
     public virtual void Update(int Id, TDIn entity)
     {
+        using var span = Span(nameof(Update));
+
         var obj = ObjectHelpers.MapTo<T>(entity);
         obj.Id = Id;
         genericRepository.Update(obj).Wait();

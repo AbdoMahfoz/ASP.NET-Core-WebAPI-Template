@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Models;
 using Models.DataModels.RoleSystem;
 using Repository.Tenant.Interfaces;
+using OpenTelemetry.Trace;
 
 namespace Repository.ExtendedRepositories.RoleSystem;
 
@@ -22,8 +23,9 @@ public interface IActionPermissionRepository : IRepository<ActionPermission>
 public class ActionPermissionRepository(
     ITenantManager tenantManager,
     IPermissionsRepository PermissionsRepository,
-    IActionRolesRepository ActionRoles)
-    : Repository<ActionPermission>(tenantManager), IActionPermissionRepository
+    IActionRolesRepository ActionRoles,
+    Tracer tracer)
+    : Repository<ActionPermission>(tenantManager, tracer), IActionPermissionRepository
 {
     public Task AssignPermissionToAction(string ActionName, string PermissionName)
     {

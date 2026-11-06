@@ -21,6 +21,8 @@ using Models.DataModels.RoleSystem;
 
 
 using Repository.ExtendedRepositories;
+using Repository.Extensions;
+using OpenTelemetry.Trace;
 
 using Repository.ExtendedRepositories.RoleSystem;
 
@@ -47,14 +49,25 @@ public class AccountLogic(
     IPasswordManager passwordManager,
     ITenantManager tenantManager,
     IAuth auth,
-    ILogger<AccountLogic> logger) : IAccountLogic
+    ILogger<AccountLogic> logger,
+    Tracer tracer) : IAccountLogic
 
 {
+
+    /// <summary>Spans named Account::Method so an account operation is visible in the same trace as the request that triggered it and the Repository&lt;User&gt; spans underneath it. The cache uses the same shape with Cache:: as its layer name.</summary>
+    private TelemetrySpan Span(string method) => tracer.StartActiveSpan($"Account::{method}");
 
 
     public async Task<CreateUserResult> Register(CreateUserRequest request, int? roleId = null, int? createdById = null)
 
     {
+
+        using var span = Span(nameof(Register));
+
+        span.SetAttribute("requested-role", roleId?.ToString() ?? "default");
+
+        // Written as a UTC instant in the invariant culture by the span helper, so two traces from two differently configured machines read the same timestamp the same way.
+        span.SetAttribute("requested-at", DateTime.UtcNow);
 
         if (string.IsNullOrWhiteSpace(request?.UserName))
             throw new ValidationException(FailureReasons.UsernameRequired);
@@ -125,6 +138,10 @@ public class AccountLogic(
     public async Task<bool> UpdatePassword(int userId, string? currentPassword, string newPassword)
 
     {
+
+        using var span = Span(nameof(UpdatePassword));
+
+        span.SetAttribute("user-id", userId);
 
         var user = await userRepository.Get(userId);
 

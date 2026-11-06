@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Repository.Tenant.Interfaces;
+using OpenTelemetry.Trace;
 
 
 namespace BusinessLogic.Implementations.Cache;
@@ -24,7 +25,8 @@ namespace BusinessLogic.Implementations.Cache;
 public class MemoryCache(
     IServiceScopeFactory serviceScopeFactory,
     IHttpContextAccessor httpContextAccessor,
-    ILogger<MemoryCache> logger) : ICache
+    ILogger<MemoryCache> logger,
+    Tracer tracer) : ICache
 
 {
 
@@ -271,6 +273,11 @@ public class MemoryCache(
             try
 
             {
+
+                // This refresh runs on its own task, detached from whatever request invalidated the key, so it opens a span of its own instead of pretending to belong to that request's trace. The cache key is recorded, never the cached value.
+                using var span = tracer.StartActiveSpan("Cache::BackgroundRefresh");
+
+                span.SetAttribute("cache-key", key);
 
                 logger.LogInformation("Refreshing invalidated cache entry {CacheKey}", key);
 

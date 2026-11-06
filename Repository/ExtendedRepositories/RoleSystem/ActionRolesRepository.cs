@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Models;
 using Models.DataModels.RoleSystem;
 using Repository.Tenant.Interfaces;
+using OpenTelemetry.Trace;
 
 namespace Repository.ExtendedRepositories.RoleSystem;
 
@@ -20,8 +21,9 @@ public interface IActionRolesRepository : IRepository<ActionRole>
 
 public class ActionRolesRepository(
     ITenantManager tenantManager,
-    IRolesRepository RolesRepository)
-    : Repository<ActionRole>(tenantManager), IActionRolesRepository
+    IRolesRepository RolesRepository,
+    Tracer tracer)
+    : Repository<ActionRole>(tenantManager, tracer), IActionRolesRepository
 {
     public Task AssignRoleToAction(string ActionName, string RoleName)
     {
